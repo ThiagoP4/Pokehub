@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { regions, getPokemonSprite, getPokemonStaticSprite } from '../data/mockData'
 import pokemonNames from '../data/pokemonNames.json'
 import { BookOpen, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-vue-next'
@@ -21,16 +21,35 @@ const selectedPlayerUuid = ref(props.players[0]?.uuid || '')
 const currentPage = ref(1)
 const PAGE_SIZE = 48
 
+watch(
+  () => props.players,
+  (newPlayers) => {
+    if (newPlayers?.length && !newPlayers.some(p => p.uuid === selectedPlayerUuid.value)) {
+      selectedPlayerUuid.value = newPlayers[0].uuid
+    }
+  },
+  { immediate: true }
+)
+
 const currentPlayer = computed(() => {
   if (props.selectedPlayer) return props.selectedPlayer
-  return props.players.find(p => p.uuid === selectedPlayerUuid.value) || props.players[0]
+  return props.players.find(p => p.uuid === selectedPlayerUuid.value) || props.players[0] || {
+    username: 'Carregando...',
+    pokedexProgress: {},
+    caughtIds: [],
+    seenIds: [],
+    shinyIds: [],
+    party: [],
+    legendaries: [],
+    shiniesHighlights: []
+  }
 })
 
 const activeRegion = computed(() => {
   return regions.find(r => r.id === selectedRegionId.value) || regions[0]
 })
 
-// Conjunto de Pokémon capturados pelo jogador ativo
+// Conjunto de Pokémon capturados pelo jogador ativo (100% Dados Reais)
 const playerCaughtSet = computed(() => {
   const set = new Set()
   const player = currentPlayer.value
@@ -47,6 +66,15 @@ const playerCaughtSet = computed(() => {
   }
   if (Array.isArray(player.shiniesHighlights)) {
     player.shiniesHighlights.forEach(s => set.add(s.id))
+  }
+  return set
+})
+
+const playerSeenSet = computed(() => {
+  const set = new Set(playerCaughtSet.value)
+  const player = currentPlayer.value
+  if (Array.isArray(player?.seenIds)) {
+    player.seenIds.forEach(id => set.add(id))
   }
   return set
 })
@@ -68,23 +96,20 @@ const playerShinySet = computed(() => {
   return set
 })
 
-// Todos os Pokémon da região ativa (100% de Kanto a Paldea)
+// Todos os Pokémon da região ativa (100% baseados nos registros reais do servidor)
 const allRegionPokemonList = computed(() => {
   const [start, end] = activeRegion.value.range
   const list = []
   const caughtSet = playerCaughtSet.value
+  const seenSet = playerSeenSet.value
   const shinySet = playerShinySet.value
-  const hasRealCaughtList = Array.isArray(currentPlayer.value?.caughtIds) && currentPlayer.value.caughtIds.length > 0
 
   for (let id = start; id <= end; id++) {
-    // Se vier a lista real do servidor Cobblemon, usa 100% os dados reais; senão usa fallback visual
-    const isCaught = hasRealCaughtList
-      ? caughtSet.has(id)
-      : caughtSet.has(id) || (id % 2 === 0 && id <= start + 40)
+    const isCaught = caughtSet.has(id)
+    const isSeen = seenSet.has(id)
     const isShiny = shinySet.has(id)
 
     const rawName = pokemonNames[id - 1] || `Pokémon #${String(id).padStart(3, '0')}`
-    // Deixa nomes compostos mais limpos (ex: Tapu-koko -> Tapu Koko, Ho-oh -> Ho-Oh)
     const name = rawName.replace(/-/g, ' ')
 
     if (filterMode.value === 'caught' && !isCaught) continue
@@ -95,6 +120,7 @@ const allRegionPokemonList = computed(() => {
       number: `#${String(id).padStart(3, '0')}`,
       name,
       isCaught,
+      isSeen,
       isShiny,
       sprite: getPokemonSprite(id, isShiny),
       fallbackSprite: getPokemonStaticSprite(id, isShiny)
@@ -104,7 +130,6 @@ const allRegionPokemonList = computed(() => {
   return list
 })
 
-// Paginação elegante
 const totalPages = computed(() => {
   return Math.ceil(allRegionPokemonList.value.length / PAGE_SIZE) || 1
 })
@@ -200,14 +225,14 @@ function changeFilter(mode) {
         <span class="badge">{{ activeRegion.gen }}</span>
         <h3 class="summary-region-name">Região de {{ activeRegion.name }}</h3>
         <p class="summary-desc">
-          {{ currentPlayer.pokedexProgress[activeRegion.id]?.caught || 0 }} de {{ activeRegion.total }} espécies registradas por {{ currentPlayer.username }} ({{ currentPlayer.pokedexProgress[activeRegion.id]?.seen || 0 }} avistadas no mapa).
+          {{ currentPlayer.pokedexProgress?.[activeRegion.id]?.caught || 0 }} de {{ activeRegion.total }} espécies registradas por {{ currentPlayer.username }} ({{ currentPlayer.pokedexProgress?.[activeRegion.id]?.seen || 0 }} avistadas no mapa).
         </p>
       </div>
 
       <div class="summary-stats">
         <div class="stat-badge-neo neo-card-inset">
           <span class="circle-val">
-            {{ Math.round(((currentPlayer.pokedexProgress[activeRegion.id]?.caught || 0) / activeRegion.total) * 100) }}%
+            {{ Math.round(((currentPlayer.pokedexProgress?.[activeRegion.id]?.caught || 0) / activeRegion.total) * 100) }}%
           </span>
           <span class="circle-lbl">Concluído</span>
         </div>
@@ -224,8 +249,9 @@ function changeFilter(mode) {
       >
         <div class="card-header">
           <span class="pkmn-number">{{ pkmn.number }}</span>
-          <span v-if="pkmn.isShiny" class="badge badge-shiny">✨ Shiny</span>
+          <span v-if="pkmn.isShiny" class="badge badge-shiny">Shiny</span>
           <span v-else-if="pkmn.isCaught" class="badge badge-online">✓ Registrado</span>
+          <span v-else-if="pkmn.isSeen" class="badge">Avistado</span>
         </div>
 
         <!-- Sprite Container Inset -->
@@ -242,7 +268,9 @@ function changeFilter(mode) {
 
         <div class="card-footer">
           <span class="pkmn-name">{{ pkmn.name }}</span>
-          <span class="pkmn-status">{{ pkmn.isCaught ? 'Capturado' : 'Não encontrado' }}</span>
+          <span class="pkmn-status">
+            {{ pkmn.isCaught ? 'Capturado' : pkmn.isSeen ? 'Apenas avistado' : 'Não encontrado' }}
+          </span>
         </div>
       </div>
     </div>
@@ -329,6 +357,7 @@ function changeFilter(mode) {
   align-items: center;
   gap: 0.35rem;
   padding: 0.25rem 0.35rem;
+  flex-wrap: wrap;
 }
 
 .friend-pill-btn {
@@ -341,16 +370,20 @@ function changeFilter(mode) {
   background: transparent;
   color: var(--neo-ink-light);
   font-family: var(--font-family);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
 }
 
+.friend-pill-btn:hover {
+  color: var(--neo-ink);
+}
+
 .friend-pill-btn.active {
   background: var(--neo-surface);
-  border: 1px solid var(--neo-ink);
   color: var(--neo-ink);
+  border: 1px solid var(--neo-ink);
   box-shadow: 1.5px 1.5px 0px var(--neo-ink);
 }
 
@@ -363,32 +396,31 @@ function changeFilter(mode) {
 }
 
 .display-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
-  background: transparent;
-  border: 1px solid transparent;
+  gap: 0.3rem;
+  padding: 0.35rem 0.7rem;
   border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+  background: transparent;
   color: var(--neo-ink-light);
   font-family: var(--font-family);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
 }
 
 .display-btn.active {
-  background: var(--neo-surface);
-  border: 1px solid var(--neo-ink);
+  background: var(--neo-accent);
   color: var(--neo-ink);
+  border: 1px solid var(--neo-ink);
   box-shadow: 1.5px 1.5px 0px var(--neo-ink);
 }
 
-/* Region Tabs estilo Folder Tabs */
 .region-tabs-container {
   overflow-x: auto;
-  padding-bottom: 0.3rem;
+  padding-bottom: 0.25rem;
 }
 
 .region-tabs {
@@ -400,8 +432,8 @@ function changeFilter(mode) {
 .region-tab-btn {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 0.55rem 1.15rem;
+  align-items: flex-start;
+  padding: 0.55rem 1rem;
   border-radius: var(--radius-sm);
   background: var(--neo-surface);
   border: var(--neo-border);
@@ -416,42 +448,43 @@ function changeFilter(mode) {
 }
 
 .region-tab-btn.active {
-  background: #fef08a; /* Amarelo de destaque */
-  box-shadow: 0px 0px 0px var(--neo-ink);
-  transform: translate(2px, 2px);
+  background: var(--neo-accent);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px var(--neo-ink);
 }
 
 .region-name {
-  font-size: 0.92rem;
   font-weight: 800;
+  font-size: 0.9rem;
   color: var(--neo-ink);
 }
 
 .region-gen {
   font-size: 0.68rem;
-  color: var(--neo-ink-light);
+  color: var(--neo-ink-muted);
+  font-family: var(--font-mono);
   font-weight: 700;
   text-transform: uppercase;
 }
 
-/* Region Summary Card */
 .region-summary-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.4rem 1.8rem;
+  padding: 1.25rem 1.5rem;
+  gap: 1.5rem;
 }
 
 .summary-region-name {
-  font-size: 1.45rem;
+  font-size: 1.35rem;
   font-weight: 900;
   color: var(--neo-ink);
-  margin: 0.3rem 0;
+  margin: 0.25rem 0 0.2rem;
 }
 
 .summary-desc {
   color: var(--neo-ink-light);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 .stat-badge-neo {
@@ -477,7 +510,6 @@ function changeFilter(mode) {
   font-weight: 800;
 }
 
-/* Pokemon Grid */
 .pokemon-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
@@ -556,7 +588,6 @@ function changeFilter(mode) {
   color: var(--neo-ink-muted);
 }
 
-/* Paginação Neo-Skeuo */
 .pagination-bar {
   padding: 1rem 1.5rem;
   display: flex;

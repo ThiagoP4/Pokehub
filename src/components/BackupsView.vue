@@ -2,42 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { HardDriveDownload, Archive, Calendar, FileArchive, CheckCircle2, Clock, RefreshCw, AlertCircle } from 'lucide-vue-next'
 
-const backups = ref([
-  {
-    id: 'world-2026-11-06-snapshot.zip',
-    filename: 'world-2026-11-06-snapshot.zip',
-    displayName: 'Backup Recente • 06/11/2026',
-    type: 'archive',
-    sizeFormatted: '475 MB',
-    createdAt: new Date().toISOString(),
-    version: 'Minecraft 1.21.1 • Cobblemon 1.6',
-    status: 'ready',
-    notes: 'Snapshot automático pré-atualização'
-  },
-  {
-    id: 'world-2026-10-28-semanal.zip',
-    filename: 'world-2026-10-28-semanal.zip',
-    displayName: 'Backup Semanal • 28/10/2026',
-    type: 'archive',
-    sizeFormatted: '422 MB',
-    createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
-    version: 'Minecraft 1.21.1 • Cobblemon 1.6',
-    status: 'ready',
-    notes: 'Backup completo do mapa e dados Cobblemon'
-  },
-  {
-    id: 'world_backup',
-    filename: 'world_backup',
-    displayName: 'Cópia Standby (world_backup)',
-    type: 'directory',
-    sizeFormatted: '410 MB',
-    createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
-    version: 'Minecraft 1.21.1 • Cobblemon 1.6',
-    status: 'ready',
-    notes: 'Snapshot do diretório salvo no servidor'
-  }
-])
-
+const backups = ref([])
 const loading = ref(false)
 const downloadingId = ref(null)
 
@@ -47,12 +12,12 @@ async function fetchBackups() {
     const res = await fetch('/api/backups')
     if (res.ok) {
       const data = await res.json()
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         backups.value = data
       }
     }
   } catch (err) {
-    console.warn('Erro ao carregar lista de backups, usando estado padrão:', err)
+    console.warn('Erro ao carregar lista de backups:', err)
   } finally {
     loading.value = false
   }

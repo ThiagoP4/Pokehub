@@ -17,7 +17,7 @@ export class BackupService {
     if (this.customBackupsPath) {
       list.push(this.customBackupsPath)
     }
-    // Procura na pasta do servidor de Minecraft: backups/, world_backup/
+    list.push(this.serverPath)
     list.push(path.join(this.serverPath, 'backups'))
     list.push(path.join(this.serverPath, 'simplebackups'))
     list.push(SAMPLE_BACKUPS_DIR)
@@ -31,38 +31,62 @@ export class BackupService {
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`
   }
 
+  async computeDirectorySize(dirPath) {
+    let total = 0
+    try {
+      const entries = await fs.readdir(dirPath, { withFileTypes: true })
+      for (const entry of entries) {
+        const fullPath = path.join(dirPath, entry.name)
+        if (entry.isDirectory()) {
+          total += await this.computeDirectorySize(fullPath)
+        } else if (entry.isFile()) {
+          const st = await fs.stat(fullPath)
+          total += st.size
+        }
+      }
+    } catch {
+      // ignora pastas sem permissão
+    }
+    return total
+  }
+
   async getBackups() {
     const backups = []
 
-    // 1. Verifica pasta world_backup se existir no servidor
+    // 1. Verifica pasta world_backup real no servidor
     const worldBackupDir = path.join(this.serverPath, 'world_backup')
     try {
       const stat = await fs.stat(worldBackupDir)
       if (stat.isDirectory()) {
+        const sizeBytes = await this.computeDirectorySize(worldBackupDir)
         backups.push({
           id: 'world_backup',
           filename: 'world_backup',
           displayName: 'Snapshot do Mundo (world_backup)',
           type: 'directory',
-          sizeBytes: 1024 * 1024 * 450, // Estimativa visual caso seja diretório
-          sizeFormatted: '~450 MB',
+          sizeBytes,
+          sizeFormatted: this.formatBytes(sizeBytes),
           createdAt: stat.mtime.toISOString(),
           version: 'Minecraft 1.21.1 • Cobblemon 1.6',
           status: 'ready',
-          notes: 'Snapshot do diretório salvo no servidor'
+          notes: 'Cópia física da pasta world_backup no servidor'
         })
       }
     } catch {
-      // world_backup não encontrado ou sem acesso
+      // world_backup não encontrado
     }
 
-    // 2. Escaneia diretórios de arquivos (.zip, .tar.gz, .tar)
+    // 2. Escaneia arquivos de backup reais (.zip, .tar.gz, .tgz, .tar, .7z)
+    const seenFiles = new Set()
     for (const dir of this.candidateDirs) {
       try {
         const entries = await fs.readdir(dir, { withFileTypes: true })
         for (const entry of entries) {
           if (entry.isFile() && /\.(zip|tar\.gz|tgz|tar|7z)$/i.test(entry.name)) {
             const fullPath = path.join(dir, entry.name)
+            if (seenFiles.has(fullPath)) continue
+            seenFiles.add(fullPath)
+
             const stat = await fs.stat(fullPath)
             backups.push({
               id: entry.name,
@@ -74,59 +98,16 @@ export class BackupService {
               createdAt: stat.mtime.toISOString(),
               version: 'Minecraft 1.21.1 • Cobblemon 1.6',
               status: 'ready',
-              notes: 'Arquivo compactado pronto para restauração',
+              notes: 'Arquivo compactado no servidor',
               filePath: fullPath
             })
           }
         }
       } catch {
-        // Ignora diretórios que não existem
+        // Ignora diretórios inexistentes
       }
     }
 
-    // Se nenhum backup foi encontrado ainda em produção/desenvolvimento, fornece dados de fallback
-    if (backups.length === 0) {
-      return [
-        {
-          id: 'world-2026-11-06-snapshot.zip',
-          filename: 'world-2026-11-06-snapshot.zip',
-          displayName: 'Backup Recente • 06/11/2026',
-          type: 'archive',
-          sizeBytes: 498073600,
-          sizeFormatted: '475 MB',
-          createdAt: new Date().toISOString(),
-          version: 'Minecraft 1.21.1 • Cobblemon 1.6',
-          status: 'ready',
-          notes: 'Snapshot automático pré-atualização'
-        },
-        {
-          id: 'world-2026-10-28-semanal.zip',
-          filename: 'world-2026-10-28-semanal.zip',
-          displayName: 'Backup Semanal • 28/10/2026',
-          type: 'archive',
-          sizeBytes: 442499072,
-          sizeFormatted: '422 MB',
-          createdAt: new Date(Date.now() - 7 * 86400000).toISOString(),
-          version: 'Minecraft 1.21.1 • Cobblemon 1.6',
-          status: 'ready',
-          notes: 'Backup completo do mapa e dados Cobblemon'
-        },
-        {
-          id: 'world_backup',
-          filename: 'world_backup',
-          displayName: 'Cópia Standby (world_backup)',
-          type: 'directory',
-          sizeBytes: 429916160,
-          sizeFormatted: '410 MB',
-          createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
-          version: 'Minecraft 1.21.1 • Cobblemon 1.6',
-          status: 'ready',
-          notes: 'Espelho salvo diretamente no sistema de arquivos'
-        }
-      ]
-    }
-
-    // Ordena do mais recente para o mais antigo
     return backups.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   }
 
@@ -134,11 +115,10 @@ export class BackupService {
     const safeName = path.basename(filename)
     for (const dir of this.candidateDirs) {
       const full = path.join(dir, safeName)
-      if (fsSync.existsSync(full)) {
+      if (fsSync.existsSync(full) && fsSync.statSync(full).isFile()) {
         return full
       }
     }
     return null
   }
 }
-

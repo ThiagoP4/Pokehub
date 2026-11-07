@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { Sparkles, Flame } from 'lucide-vue-next'
+import { Sparkles, Flame, Trophy } from 'lucide-vue-next'
 import { getPokemonSprite } from '../data/mockData'
 
 const props = defineProps({
@@ -16,19 +16,61 @@ const props = defineProps({
 
 const emit = defineEmits(['selectPlayer'])
 
-// Amigos que estão online neste momento
-const onlineFriends = computed(() => {
-  return props.players.filter(p => p.isOnline)
+// Treinadores registrados no servidor
+const activeTrainers = computed(() => {
+  const online = props.players.filter(p => p.isOnline)
+  return online.length > 0 ? online : props.players.slice(0, 5)
 })
 
-// Progresso coletivo da Pokédex de Kanto (exemplo de meta do grupo)
+const hasOnlineNow = computed(() => {
+  return props.players.some(p => p.isOnline)
+})
+
+// Líder real da Pokédex de Kanto
+const kantoLeader = computed(() => {
+  if (!props.players.length) return null
+  return [...props.players].sort(
+    (a, b) => (b.pokedexProgress?.kanto?.caught || 0) - (a.pokedexProgress?.kanto?.caught || 0)
+  )[0]
+})
+
 const bestKantoCaught = computed(() => {
-  if (!props.players.length) return 0
-  return Math.max(...props.players.map(p => p.pokedexProgress?.kanto?.caught || 0))
+  return kantoLeader.value?.pokedexProgress?.kanto?.caught || 0
 })
 
 const kantoPercent = computed(() => {
   return Math.round((bestKantoCaught.value / 151) * 100)
+})
+
+// Destaque real de Shiny entre os jogadores do servidor
+const featuredShiny = computed(() => {
+  for (const p of props.players) {
+    if (Array.isArray(p.shiniesHighlights) && p.shiniesHighlights.length > 0) {
+      const topShiny = [...p.shiniesHighlights].sort((a, b) => (b.level || 0) - (a.level || 0))[0]
+      return { player: p, pokemon: topShiny }
+    }
+  }
+  return null
+})
+
+// Destaque real de Lendário ou Pokémon de maior nível no servidor
+const featuredPower = computed(() => {
+  for (const p of props.players) {
+    if (Array.isArray(p.legendaries) && p.legendaries.length > 0) {
+      const topLeg = [...p.legendaries].sort((a, b) => (b.level || 0) - (a.level || 0))[0]
+      return { player: p, pokemon: topLeg, isLegendary: true }
+    }
+  }
+  // Se ainda não houver lendário, mostra o Pokémon de maior nível entre todas as equipes reais
+  let best = null
+  for (const p of props.players) {
+    for (const poke of p.party || []) {
+      if (!best || (poke.level || 0) > (best.pokemon.level || 0)) {
+        best = { player: p, pokemon: poke, isLegendary: false }
+      }
+    }
+  }
+  return best
 })
 </script>
 
@@ -39,26 +81,28 @@ const kantoPercent = computed(() => {
       <img src="/hero-bg.jpg" alt="Charizard Cobblemon Voando" class="hero-bg-art" />
     </div>
 
-    <!-- Composição Rica na Esquerda, mas 100% com Dados Reais do Servidor -->
+    <!-- Composição Rica na Esquerda 100% com Dados Reais do Servidor -->
     <div class="hero-direct-content">
-      <!-- 1. Pílula de Quem Está Jogando Agora (com as cabeças das skins) -->
-      <div class="online-now-pill">
+      <!-- 1. Pílula de Treinadores do Servidor -->
+      <div class="online-now-pill" v-if="players.length">
         <span class="pulse-dot"></span>
-        <span class="online-pill-text">{{ onlineFriends.length }} jogando agora:</span>
+        <span class="online-pill-text">
+          {{ hasOnlineNow ? `${activeTrainers.length} jogando agora:` : `${players.length} treinadores no servidor:` }}
+        </span>
         <div class="online-avatars">
           <img 
-            v-for="friend in onlineFriends" 
+            v-for="friend in activeTrainers" 
             :key="friend.uuid" 
             :src="friend.avatar" 
             :alt="friend.username"
-            :title="friend.username + ' está online'"
+            :title="friend.username"
             class="mini-head"
             @click="emit('selectPlayer', friend)"
           />
         </div>
       </div>
 
-      <!-- 2. Título Principal com Progresso Coletivo -->
+      <!-- 2. Título Principal com Progresso Real de Kanto -->
       <h1 class="hero-title">
         Meta Kanto: {{ bestKantoCaught }} / 151
       </h1>
@@ -66,7 +110,10 @@ const kantoPercent = computed(() => {
       <!-- 3. Barra de Progresso Neo-Skeuo da Meta do Servidor -->
       <div class="server-goal-box">
         <div class="goal-labels">
-          <span>Progresso da Pokédex de Kanto (Líder: Thiago)</span>
+          <span>
+            Progresso da Pokédex de Kanto
+            <template v-if="kantoLeader">(Líder: {{ kantoLeader.username }})</template>
+          </span>
           <strong>{{ kantoPercent }}%</strong>
         </div>
         <div class="goal-track">
@@ -74,31 +121,44 @@ const kantoPercent = computed(() => {
         </div>
       </div>
 
-      <!-- 4. Card Tátil de "Última Captura Rara" no lugar dos botões repetidos -->
+      <!-- 4. Cards Táteis Dinâmicos baseados nos Pokémon Reais do Servidor -->
       <div class="recent-catch-Group">
-        <div class="recent-catch-card" @click="emit('selectPlayer', players[1])">
+        <div 
+          v-if="featuredShiny" 
+          class="recent-catch-card" 
+          @click="emit('selectPlayer', featuredShiny.player)"
+        >
           <div class="rc-sprite-box">
-            <img :src="getPokemonSprite(384, true)" alt="Shiny Rayquaza" class="rc-sprite" />
+            <img :src="getPokemonSprite(featuredShiny.pokemon.id, true)" :alt="featuredShiny.pokemon.name" class="rc-sprite" />
           </div>
           <div class="rc-info">
             <span class="rc-tag">
               <Sparkles :size="12" />
-              Último Shiny Descoberto
+              Destaque Shiny
             </span>
-            <span class="rc-desc"><strong>Alisson</strong> capturou <strong>Shiny Rayquaza</strong> (Lv. 85)</span>
+            <span class="rc-desc">
+              <strong>{{ featuredShiny.player.username }}</strong> tem <strong>Shiny {{ featuredShiny.pokemon.name }}</strong> (Lv. {{ featuredShiny.pokemon.level }})
+            </span>
           </div>
         </div>
 
-        <div class="recent-catch-card" @click="emit('selectPlayer', players[2])">
+        <div 
+          v-if="featuredPower" 
+          class="recent-catch-card" 
+          @click="emit('selectPlayer', featuredPower.player)"
+        >
           <div class="rc-sprite-box legendary-bg">
-            <img :src="getPokemonSprite(483, false)" alt="Dialga" class="rc-sprite" />
+            <img :src="getPokemonSprite(featuredPower.pokemon.id, featuredPower.pokemon.shiny)" :alt="featuredPower.pokemon.name" class="rc-sprite" />
           </div>
           <div class="rc-info">
             <span class="rc-tag legendary-tag">
-              <Flame :size="12" />
-              Último Lendário
+              <Flame v-if="featuredPower.isLegendary" :size="12" />
+              <Trophy v-else :size="12" />
+              {{ featuredPower.isLegendary ? 'Lendário no Servidor' : 'Maior Nível na Party' }}
             </span>
-            <span class="rc-desc"><strong>Iorran</strong> capturou <strong>Dialga</strong> (Lv. 80)</span>
+            <span class="rc-desc">
+              <strong>{{ featuredPower.player.username }}</strong> com <strong>{{ featuredPower.pokemon.name }}</strong> (Lv. {{ featuredPower.pokemon.level }})
+            </span>
           </div>
         </div>
       </div>
@@ -107,7 +167,6 @@ const kantoPercent = computed(() => {
 </template>
 
 <style scoped>
-/* Cabeçalho integrado de ponta a ponta no topo do painel */
 .neo-hero-header {
   position: relative;
   min-height: 420px;
@@ -146,7 +205,6 @@ const kantoPercent = computed(() => {
   mask-image: linear-gradient(to right, transparent 0%, black 28%);
 }
 
-/* Coluna da esquerda com peso visual equilibrado */
 .hero-direct-content {
   position: relative;
   z-index: 2;
@@ -156,7 +214,6 @@ const kantoPercent = computed(() => {
   align-items: flex-start;
 }
 
-/* 1. Pílula Online Agora */
 .online-now-pill {
   display: inline-flex;
   align-items: center;
@@ -205,7 +262,6 @@ const kantoPercent = computed(() => {
   transform: scale(1.15);
 }
 
-/* 2. Título Principal */
 .hero-title {
   font-size: 2.55rem;
   font-weight: 900;
@@ -216,7 +272,6 @@ const kantoPercent = computed(() => {
   text-shadow: 3px 3px 0px var(--neo-ink);
 }
 
-/* 3. Barra de Progresso da Meta */
 .server-goal-box {
   width: 100%;
   max-width: 470px;
@@ -256,7 +311,6 @@ const kantoPercent = computed(() => {
   border-right: 2px solid var(--neo-ink);
 }
 
-/* 4. Pílulas de Últimas Capturas Raras (Feed de Atividade) */
 .recent-catch-Group {
   display: flex;
   gap: 0.75rem;

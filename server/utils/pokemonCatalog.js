@@ -122,9 +122,12 @@ export function resolveSpecies(rawSpecies, fallbackId = 1) {
     }
   }
 
-  const formattedName = cleanKey
-    ? cleanKey.charAt(0).toUpperCase() + cleanKey.slice(1)
-    : `Pokemon #${fallbackId}`
+  const byIdName = ALL_POKEMON_NAMES[fallbackId - 1]
+  const formattedName = byIdName
+    ? byIdName.replace(/-/g, ' ')
+    : cleanKey
+      ? cleanKey.charAt(0).toUpperCase() + cleanKey.slice(1)
+      : `Pokemon #${fallbackId}`
 
   return {
     id: fallbackId,

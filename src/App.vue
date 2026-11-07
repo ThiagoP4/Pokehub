@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import Navbar from './components/Navbar.vue'
 import HeroSection from './components/HeroSection.vue'
 import StatsOverview from './components/StatsOverview.vue'
@@ -9,14 +9,19 @@ import TrophiesView from './components/TrophiesView.vue'
 import BackupsView from './components/BackupsView.vue'
 import PlayerModal from './components/PlayerModal.vue'
 
-import { serverInfo as initialServerInfo, playersData as initialPlayersData, getPokemonSprite } from './data/mockData'
+import { getPokemonSprite } from './data/mockData'
 
 const activeTab = ref('overview')
 const searchQuery = ref('')
 const selectedPlayer = ref(null)
 
-const serverState = ref({ ...initialServerInfo })
-const playersState = ref([...initialPlayersData])
+const serverState = ref({
+  name: 'PokeHub',
+  version: 'Minecraft 1.21.1 • Cobblemon 1.6',
+  onlinePlayers: 0,
+  totalPlayers: 0
+})
+const playersState = ref([])
 
 async function loadDashboardFromApi() {
   try {
@@ -26,16 +31,24 @@ async function loadDashboardFromApi() {
     if (data?.serverInfo) {
       serverState.value = data.serverInfo
     }
-    if (Array.isArray(data?.playersData) && data.playersData.length > 0) {
+    if (Array.isArray(data?.playersData)) {
       playersState.value = data.playersData
     }
-  } catch {
-    // Mantém dados locais caso o frontend rode isolado sem o backend
+  } catch (err) {
+    console.error('Erro ao buscar dados da API:', err)
   }
 }
 
+let pollTimer = null
+
 onMounted(() => {
   loadDashboardFromApi()
+  // Atualiza em tempo real a cada 15 segundos
+  pollTimer = setInterval(loadDashboardFromApi, 15000)
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
 })
 
 // Filtragem de jogadores por busca

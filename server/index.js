@@ -2,6 +2,7 @@ import http from 'node:http'
 import fs from 'node:fs/promises'
 import fsSync from 'node:fs'
 import path from 'node:path'
+import { spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { DashboardService } from './services/DashboardService.js'
 import { BackupService } from './services/BackupService.js'
@@ -141,20 +142,30 @@ const server = http.createServer(async (req, res) => {
 
     if (pathname.startsWith('/api/backups/download/') && req.method === 'GET') {
       const filename = decodeURIComponent(pathname.replace('/api/backups/download/', ''))
-      const filePath = backupService.getBackupFilePath(filename)
 
+      // Se for o diretório world_backup do servidor, compacta em tempo real via stream tar.gz
+      if (filename === 'world_backup') {
+        const worldBackupDir = path.join(backupService.serverPath, 'world_backup')
+        if (fsSync.existsSync(worldBackupDir) && fsSync.statSync(worldBackupDir).isDirectory()) {
+          res.writeHead(200, {
+            'Content-Type': 'application/gzip',
+            'Content-Disposition': 'attachment; filename="world_backup.tar.gz"'
+          })
+          const tarProc = spawn('tar', ['-czf', '-', '-C', backupService.serverPath, 'world_backup'])
+          tarProc.stdout.pipe(res)
+          tarProc.on('error', () => res.end())
+          return
+        }
+      }
+
+      const filePath = backupService.getBackupFilePath(filename)
       if (!filePath) {
-        // Se for um arquivo de demonstração/simulado ou se não existir arquivo físico
-        res.writeHead(200, {
-          'Content-Type': 'application/octet-stream',
-          'Content-Disposition': `attachment; filename="${filename}"`
-        })
-        res.end(Buffer.from(`PokeHub Backup Mock Content for ${filename} (${new Date().toISOString()})\n`))
+        sendJson(res, 404, { error: 'Arquivo de backup não encontrado no servidor' })
         return
       }
 
       res.writeHead(200, {
-        'Content-Type': 'application/zip',
+        'Content-Type': 'application/octet-stream',
         'Content-Disposition': `attachment; filename="${path.basename(filePath)}"`
       })
       const stream = fsSync.createReadStream(filePath)
