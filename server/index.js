@@ -143,7 +143,25 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/api/backups/download/') && req.method === 'GET') {
       const filename = decodeURIComponent(pathname.replace('/api/backups/download/', ''))
 
-      // Se for o diretório world ou world_backup do servidor, compacta em tempo real via stream tar.gz
+      // 1. Backup inteligente apenas da Região do Spawn + Dados de Jogadores/Pokémons
+      if (filename === 'world_spawn' || filename === 'world_spawn_backup.tar.gz') {
+        const manifest = await backupService.buildSpawnBackupManifest()
+        if (manifest.relativePaths.length > 0) {
+          res.writeHead(200, {
+            'Content-Type': 'application/gzip',
+            'Content-Disposition': 'attachment; filename="world_spawn_backup.tar.gz"'
+          })
+          const tarProc = spawn('tar', ['-czf', '-', '-C', backupService.serverPath, ...manifest.relativePaths])
+          tarProc.stdout.pipe(res)
+          req.on('close', () => {
+            try { tarProc.kill() } catch {}
+          })
+          tarProc.on('error', () => res.end())
+          return
+        }
+      }
+
+      // 2. Se for o diretório world completo ou world_backup do servidor, compacta em tempo real via stream tar.gz
       if (filename === 'world' || filename === 'world.tar.gz' || filename === 'world_backup' || filename === 'world_backup.tar.gz') {
         const folderName = filename.startsWith('world_backup') ? 'world_backup' : 'world'
         const targetDir = path.join(backupService.serverPath, folderName)
