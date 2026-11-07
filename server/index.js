@@ -143,16 +143,20 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/api/backups/download/') && req.method === 'GET') {
       const filename = decodeURIComponent(pathname.replace('/api/backups/download/', ''))
 
-      // Se for o diretório world_backup do servidor, compacta em tempo real via stream tar.gz
-      if (filename === 'world_backup') {
-        const worldBackupDir = path.join(backupService.serverPath, 'world_backup')
-        if (fsSync.existsSync(worldBackupDir) && fsSync.statSync(worldBackupDir).isDirectory()) {
+      // Se for o diretório world ou world_backup do servidor, compacta em tempo real via stream tar.gz
+      if (filename === 'world' || filename === 'world.tar.gz' || filename === 'world_backup' || filename === 'world_backup.tar.gz') {
+        const folderName = filename.startsWith('world_backup') ? 'world_backup' : 'world'
+        const targetDir = path.join(backupService.serverPath, folderName)
+        if (fsSync.existsSync(targetDir) && fsSync.statSync(targetDir).isDirectory()) {
           res.writeHead(200, {
             'Content-Type': 'application/gzip',
-            'Content-Disposition': 'attachment; filename="world_backup.tar.gz"'
+            'Content-Disposition': `attachment; filename="${folderName}.tar.gz"`
           })
-          const tarProc = spawn('tar', ['-czf', '-', '-C', backupService.serverPath, 'world_backup'])
+          const tarProc = spawn('tar', ['-czf', '-', '-C', backupService.serverPath, folderName])
           tarProc.stdout.pipe(res)
+          req.on('close', () => {
+            try { tarProc.kill() } catch {}
+          })
           tarProc.on('error', () => res.end())
           return
         }

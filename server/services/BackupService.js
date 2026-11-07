@@ -1,27 +1,32 @@
 import fs from 'node:fs/promises'
 import fsSync from 'node:fs'
 import path from 'node:path'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
 import { fileURLToPath } from 'node:url'
 
+const execFileAsync = promisify(execFile)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const SAMPLE_BACKUPS_DIR = path.resolve(__dirname, '../sample-world/backups')
+const DEFAULT_JAIL_MOUNT_PATH = '/mnt/minecraft_server'
+const DEFAULT_SAMPLE_PATH = path.resolve(__dirname, '../sample-world')
 
 export class BackupService {
   constructor(options = {}) {
-    this.serverPath = options.serverPath || process.env.MINECRAFT_SERVER_PATH || path.resolve(__dirname, '../sample-world')
-    this.customBackupsPath = options.backupsPath || process.env.BACKUPS_PATH || null
+    const autoDetectedPath = fsSync.existsSync(DEFAULT_JAIL_MOUNT_PATH)
+      ? DEFAULT_JAIL_MOUNT_PATH
+      : DEFAULT_SAMPLE_PATH
+    this.serverPath = options.serverPath || process.env.MINECRAFT_SERVER_PATH || autoDetectedPath
+    this.customBackupsPath = options.backupsPath || process.env.BACKUPS_PATH || '/mnt/backups'
+    this.sizeCache = new Map()
   }
 
   get candidateDirs() {
-    const list = []
-    if (this.customBackupsPath) {
-      list.push(this.customBackupsPath)
-    }
-    list.push(this.serverPath)
-    list.push(path.join(this.serverPath, 'backups'))
-    list.push(path.join(this.serverPath, 'simplebackups'))
-    list.push(SAMPLE_BACKUPS_DIR)
-    return list
+    return [
+      this.customBackupsPath,
+      this.serverPath,
+      path.join(this.serverPath, 'backups'),
+      path.join(this.serverPath, 'simplebackups')
+    ].filter(Boolean)
   }
 
   formatBytes(bytes) {
@@ -31,58 +36,85 @@ export class BackupService {
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`
   }
 
-  async computeDirectorySize(dirPath) {
-    let total = 0
+  async getFastDirectorySize(dirPath) {
+    const cached = this.sizeCache.get(dirPath)
+    if (cached && Date.now() - cached.time < 5 * 60 * 1000) {
+      return cached.bytes
+    }
+
     try {
-      const entries = await fs.readdir(dirPath, { withFileTypes: true })
-      for (const entry of entries) {
-        const fullPath = path.join(dirPath, entry.name)
-        if (entry.isDirectory()) {
-          total += await this.computeDirectorySize(fullPath)
-        } else if (entry.isFile()) {
-          const st = await fs.stat(fullPath)
-          total += st.size
-        }
+      const { stdout } = await execFileAsync('du', ['-sk', dirPath], { timeout: 3000 })
+      const kb = parseInt(stdout.trim().split(/\s+/)[0], 10)
+      if (!Number.isNaN(kb)) {
+        const bytes = kb * 1024
+        this.sizeCache.set(dirPath, { bytes, time: Date.now() })
+        return bytes
       }
     } catch {
-      // ignora pastas sem permissão
+      // Fallback caso du não esteja disponível (ex: Windows dev)
     }
-    return total
+
+    return 0
   }
 
   async getBackups() {
     const backups = []
 
-    // 1. Verifica pasta world_backup real no servidor
+    // 1. Mundo atual em tempo real (world)
+    const worldDir = path.join(this.serverPath, 'world')
+    try {
+      const stat = await fs.stat(worldDir)
+      if (stat.isDirectory()) {
+        const sizeBytes = await this.getFastDirectorySize(worldDir)
+        backups.push({
+          id: 'world',
+          filename: 'world.tar.gz',
+          targetFolder: 'world',
+          displayName: 'Mapa Atual (world)',
+          type: 'directory',
+          sizeBytes,
+          sizeFormatted: sizeBytes > 0 ? this.formatBytes(sizeBytes) : 'Compactação sob demanda',
+          createdAt: stat.mtime.toISOString(),
+          version: 'Minecraft 1.21.1 • Cobblemon 1.6',
+          status: 'ready',
+          notes: 'Gera um arquivo .tar.gz em tempo real do mundo ativo'
+        })
+      }
+    } catch {
+      // world não encontrado
+    }
+
+    // 2. Snapshot world_backup no servidor
     const worldBackupDir = path.join(this.serverPath, 'world_backup')
     try {
       const stat = await fs.stat(worldBackupDir)
       if (stat.isDirectory()) {
-        const sizeBytes = await this.computeDirectorySize(worldBackupDir)
+        const sizeBytes = await this.getFastDirectorySize(worldBackupDir)
         backups.push({
           id: 'world_backup',
-          filename: 'world_backup',
-          displayName: 'Snapshot do Mundo (world_backup)',
+          filename: 'world_backup.tar.gz',
+          targetFolder: 'world_backup',
+          displayName: 'Backup Salvo (world_backup)',
           type: 'directory',
           sizeBytes,
-          sizeFormatted: this.formatBytes(sizeBytes),
+          sizeFormatted: sizeBytes > 0 ? this.formatBytes(sizeBytes) : 'Compactação sob demanda',
           createdAt: stat.mtime.toISOString(),
           version: 'Minecraft 1.21.1 • Cobblemon 1.6',
           status: 'ready',
-          notes: 'Cópia física da pasta world_backup no servidor'
+          notes: 'Snapshot world_backup armazenado na pasta do servidor'
         })
       }
     } catch {
       // world_backup não encontrado
     }
 
-    // 2. Escaneia arquivos de backup reais (.zip, .tar.gz, .tgz, .tar, .7z)
+    // 3. Escaneia arquivos compactados (.zip, .tar.gz, .tgz, .tar, .7z, .zst)
     const seenFiles = new Set()
     for (const dir of this.candidateDirs) {
       try {
         const entries = await fs.readdir(dir, { withFileTypes: true })
         for (const entry of entries) {
-          if (entry.isFile() && /\.(zip|tar\.gz|tgz|tar|7z)$/i.test(entry.name)) {
+          if (entry.isFile() && /\.(zip|tar\.gz|tgz|tar|7z|tar\.zst)$/i.test(entry.name)) {
             const fullPath = path.join(dir, entry.name)
             if (seenFiles.has(fullPath)) continue
             seenFiles.add(fullPath)
@@ -98,13 +130,13 @@ export class BackupService {
               createdAt: stat.mtime.toISOString(),
               version: 'Minecraft 1.21.1 • Cobblemon 1.6',
               status: 'ready',
-              notes: 'Arquivo compactado no servidor',
+              notes: `Arquivo em ${dir}`,
               filePath: fullPath
             })
           }
         }
       } catch {
-        // Ignora diretórios inexistentes
+        // Ignora diretórios que não existem
       }
     }
 

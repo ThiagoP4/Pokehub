@@ -107,12 +107,13 @@ const allRegionPokemonList = computed(() => {
   for (let id = start; id <= end; id++) {
     const isCaught = caughtSet.has(id)
     const isSeen = seenSet.has(id)
-    const isShiny = shinySet.has(id)
+    const isShiny = isCaught && shinySet.has(id)
 
     const rawName = pokemonNames[id - 1] || `Pokémon #${String(id).padStart(3, '0')}`
     const name = rawName.replace(/-/g, ' ')
 
     if (filterMode.value === 'caught' && !isCaught) continue
+    if (filterMode.value === 'seen' && (!isSeen || isCaught)) continue
     if (filterMode.value === 'missing' && isCaught) continue
 
     list.push({
@@ -179,7 +180,7 @@ function changeFilter(mode) {
           </button>
         </div>
 
-        <!-- Filtro: Todos / Capturados / Faltando -->
+        <!-- Filtro: Todos / Capturados / Avistados / Faltando -->
         <div class="display-filters neo-card-inset">
           <button 
             :class="['display-btn', { active: filterMode === 'all' }]"
@@ -193,6 +194,12 @@ function changeFilter(mode) {
           >
             <CheckCircle2 :size="14" />
             Pegou
+          </button>
+          <button 
+            :class="['display-btn', { active: filterMode === 'seen' }]"
+            @click="changeFilter('seen')"
+          >
+            Avistados
           </button>
           <button 
             :class="['display-btn', { active: filterMode === 'missing' }]"
@@ -245,13 +252,17 @@ function changeFilter(mode) {
         v-for="pkmn in paginatedPokemonList" 
         :key="pkmn.id"
         class="pokemon-card neo-card"
-        :class="{ 'not-caught': !pkmn.isCaught, 'is-shiny': pkmn.isShiny }"
+        :class="{
+          'not-caught': !pkmn.isCaught && !pkmn.isSeen,
+          'seen-only': pkmn.isSeen && !pkmn.isCaught,
+          'is-shiny': pkmn.isShiny
+        }"
       >
         <div class="card-header">
           <span class="pkmn-number">{{ pkmn.number }}</span>
-          <span v-if="pkmn.isShiny" class="badge badge-shiny">Shiny</span>
+          <span v-if="pkmn.isShiny" class="badge badge-shiny">✨ Shiny</span>
           <span v-else-if="pkmn.isCaught" class="badge badge-online">✓ Registrado</span>
-          <span v-else-if="pkmn.isSeen" class="badge">Avistado</span>
+          <span v-else-if="pkmn.isSeen" class="badge badge-seen">Avistado</span>
         </div>
 
         <!-- Sprite Container Inset -->
@@ -260,7 +271,10 @@ function changeFilter(mode) {
             :src="pkmn.sprite" 
             :alt="pkmn.name" 
             class="pkmn-sprite"
-            :class="{ 'silhouette': !pkmn.isCaught }"
+            :class="{
+              'silhouette': !pkmn.isCaught && !pkmn.isSeen,
+              'seen-sprite': pkmn.isSeen && !pkmn.isCaught
+            }"
             loading="lazy"
             @error="$event.target.src = pkmn.fallbackSprite"
           />
@@ -269,7 +283,7 @@ function changeFilter(mode) {
         <div class="card-footer">
           <span class="pkmn-name">{{ pkmn.name }}</span>
           <span class="pkmn-status">
-            {{ pkmn.isCaught ? 'Capturado' : pkmn.isSeen ? 'Apenas avistado' : 'Não encontrado' }}
+            {{ pkmn.isCaught ? 'Capturado' : pkmn.isSeen ? 'Avistado no mapa' : 'Não encontrado' }}
           </span>
         </div>
       </div>
@@ -531,7 +545,22 @@ function changeFilter(mode) {
 
 .pokemon-card.not-caught {
   background: var(--neo-bg-alt);
-  opacity: 0.7;
+  opacity: 0.68;
+}
+
+.pokemon-card.seen-only {
+  background: #f8f5ec;
+}
+
+.badge-seen {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid var(--neo-ink);
+}
+
+.pkmn-sprite.seen-sprite {
+  filter: grayscale(55%);
+  opacity: 0.72;
 }
 
 .card-header {

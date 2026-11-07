@@ -62,13 +62,11 @@ export class FileSystemProvider {
       const content = await fs.readFile(logPath, 'utf8')
       const lines = content.split(/\r?\n/)
       for (const line of lines) {
-        // Se o servidor reiniciou no mesmo log, limpa estado anterior
         if (line.includes('Starting minecraft server version') || line.includes('Stopping server')) {
           onlineSet.clear()
           continue
         }
 
-        // Login: "Thatugo joined the game" ou "Thatugo[/...] logged in with entity id"
         const joinMatch = line.match(/\]: ([A-Za-z0-9_]{2,16}) joined the game/)
         if (joinMatch) {
           onlineSet.add(joinMatch[1].toLowerCase())
@@ -80,7 +78,6 @@ export class FileSystemProvider {
           continue
         }
 
-        // Logout: "Thatugo left the game" ou "Thatugo lost connection:"
         const leaveMatch = line.match(/\]: ([A-Za-z0-9_]{2,16}) left the game/)
         if (leaveMatch) {
           onlineSet.delete(leaveMatch[1].toLowerCase())
@@ -93,7 +90,7 @@ export class FileSystemProvider {
         }
       }
     } catch {
-      // Caso latest.log não exista (ex: sample-world local)
+      // Caso latest.log não exista
     }
     return onlineSet
   }
@@ -122,15 +119,19 @@ export class FileSystemProvider {
     const formattedNature = rawNature.charAt(0).toUpperCase() + rawNature.slice(1)
 
     const rawAbility = String(
-      slot.Ability?.AbilityName || slot.Ability || slot.ability || ' Padrão'
+      slot.Ability?.AbilityName || slot.Ability || slot.ability || 'Padrão'
     ).replace(/^cobblemon:/, '')
     const formattedAbility = rawAbility.charAt(0).toUpperCase() + rawAbility.slice(1)
+
+    // No NBT do Cobblemon, Shiny é um byte (1 = true, 0 = false) ou dentro de aspects
+    const isShinyByte = slot.Shiny === 1 || slot.Shiny === true || slot.shiny === 1 || slot.shiny === true
+    const hasShinyAspect = Array.isArray(slot.Aspects) && slot.Aspects.includes('shiny')
 
     return {
       id: meta.id,
       name: meta.name,
       level: Number(slot.Level ?? slot.level ?? 1),
-      shiny: Boolean(slot.Shiny || slot.shiny),
+      shiny: Boolean(isShinyByte || hasShinyAspect),
       isLegendary: meta.isLegendary,
       gender: slot.Gender === 'FEMALE' ? 'F' : slot.Gender === 'GENDERLESS' ? 'N' : 'M',
       nature: formattedNature,
@@ -211,48 +212,40 @@ export class FileSystemProvider {
     const caughtIds = new Set()
     const shinyIds = new Set()
 
-    // 1. Lê o arquivo oficial world/pokedex/<prefix>/<uuid>.nbt do Cobblemon 1.6
+    // 1. Lê a estrutura exata do Cobblemon 1.6 em world/pokedex/<prefix>/<uuid>.nbt
+    // Estrutura real: { speciesRecords: { "cobblemon:sprigatito": { aspects: [...], formRecords: { normal: { knowledge: "CAUGHT" | "ENCOUNTERED", seenShinyStates: ["normal"] } } } } }
     const nbtPath = path.join(this.worldPath, 'pokedex', prefix, `${uuid}.nbt`)
     const parsed = await this.readNbtSafe(nbtPath)
+    const speciesRecords = parsed?.speciesRecords || {}
 
-    if (parsed && typeof parsed === 'object') {
-      const inspectSpeciesEntry = (speciesKey, recordObj) => {
+    if (speciesRecords && typeof speciesRecords === 'object') {
+      for (const [speciesKey, recordObj] of Object.entries(speciesRecords)) {
+        if (!recordObj || typeof recordObj !== 'object') continue
         const meta = resolveSpecies(speciesKey, 0)
-        if (!meta.id || meta.id < 1 || meta.id > 1025) return
+        if (!meta.id || meta.id < 1 || meta.id > 1025) continue
 
         seenIds.add(meta.id)
-        const serialized = JSON.stringify(recordObj || '').toUpperCase()
-        const isCaught =
-          serialized.includes('CAUGHT') ||
-          recordObj === 2 ||
-          recordObj?.knowledge === 2 ||
-          Boolean(recordObj?.caught) ||
-          Number(recordObj?.caughtCount) > 0
+
+        // Verifica formRecords.<form>.knowledge === "CAUGHT"
+        let isCaught = false
+        const formRecords = recordObj.formRecords || {}
+        for (const formVal of Object.values(formRecords)) {
+          if (formVal && formVal.knowledge === 'CAUGHT') {
+            isCaught = true
+            break
+          }
+        }
 
         if (isCaught) {
           caughtIds.add(meta.id)
         }
-        if (serialized.includes('SHINY')) {
+
+        // Um Pokémon na Pokédex só é Shiny capturado pelo jogador se tiver "shiny" dentro de recordObj.aspects (e tiver sido CAUGHT)
+        const aspects = Array.isArray(recordObj.aspects) ? recordObj.aspects : []
+        if (isCaught && aspects.some(a => String(a).toLowerCase() === 'shiny')) {
           shinyIds.add(meta.id)
         }
       }
-
-      const scanCompound = (obj) => {
-        if (!obj || typeof obj !== 'object') return
-        for (const [key, val] of Object.entries(obj)) {
-          if (key.startsWith('cobblemon:')) {
-            inspectSpeciesEntry(key, val)
-          } else if (val && typeof val === 'object') {
-            if (typeof val.species === 'string' || typeof val.speciesId === 'string') {
-              inspectSpeciesEntry(val.species || val.speciesId, val)
-            } else {
-              scanCompound(val)
-            }
-          }
-        }
-      }
-
-      scanCompound(parsed)
     }
 
     // 2. Mescla dados de cobblemonplayerdata/<prefix>/<uuid>.json (aspectsCollected)
@@ -263,13 +256,13 @@ export class FileSystemProvider {
       if (meta.id >= 1 && meta.id <= 1025) {
         seenIds.add(meta.id)
         caughtIds.add(meta.id)
-        if (Array.isArray(aspects) && aspects.some(a => String(a).toLowerCase().includes('shiny'))) {
+        if (Array.isArray(aspects) && aspects.some(a => String(a).toLowerCase() === 'shiny')) {
           shinyIds.add(meta.id)
         }
       }
     }
 
-    // 3. Mescla todos os Pokémon presentes na Party e no PC do jogador
+    // 3. Mescla todos os Pokémon presentes atualmente na Party e no PC do jogador
     for (const poke of ownedPokemon) {
       if (poke.id >= 1 && poke.id <= 1025) {
         seenIds.add(poke.id)
@@ -345,63 +338,38 @@ export class FileSystemProvider {
       const { pokedex: pokedexProgress, seenIds, caughtIds, shinyIds } =
         await this.readRealPokedex(uuid, prefix, cobbleData, allOwnedPokemon)
 
-      // Lista única de Shinies reais encontrados na Party + PC + Pokédex
-      const shiniesMap = new Map()
-      for (const p of allOwnedPokemon) {
-        if (p.shiny) {
-          shiniesMap.set(`${p.id}-${p.level}`, {
-            id: p.id,
-            name: p.name,
-            level: p.level,
-            shiny: true,
-            isLegendary: p.isLegendary
-          })
-        }
-      }
-      for (const id of shinyIds) {
-        if (!Array.from(shiniesMap.values()).some(s => s.id === id)) {
-          const meta = resolveSpecies(`#${id}`, id)
-          shiniesMap.set(`${id}-dex`, {
-            id,
-            name: meta.name,
-            level: 50,
-            shiny: true,
-            isLegendary: meta.isLegendary
-          })
-        }
-      }
-      const shiniesHighlights = Array.from(shiniesMap.values())
+      // Lista de Shinies reais na Party e no PC (com o nível real do Pokémon!)
+      const shiniesHighlights = allOwnedPokemon
+        .filter(p => p.shiny)
+        .map(p => ({
+          id: p.id,
+          name: p.name,
+          level: p.level,
+          shiny: true,
+          isLegendary: p.isLegendary
+        }))
 
-      // Lista única de Lendários reais encontrados na Party + PC + Pokédex
-      const legendariesMap = new Map()
-      for (const p of allOwnedPokemon) {
-        if (p.isLegendary) {
-          legendariesMap.set(`${p.id}-${p.level}`, {
-            id: p.id,
-            name: p.name,
-            level: p.level,
-            shiny: p.shiny,
-            caughtAt: 'Servidor Cobblemon'
-          })
-        }
-      }
-      const legendaries = Array.from(legendariesMap.values())
+      // Lista de Lendários reais na Party e no PC
+      const legendaries = allOwnedPokemon
+        .filter(p => p.isLegendary)
+        .map(p => ({
+          id: p.id,
+          name: p.name,
+          level: p.level,
+          shiny: p.shiny,
+          caughtAt: 'Servidor Cobblemon'
+        }))
 
-      const totalCaptured = Math.max(
-        Number(adv.totalCaptureCount) || 0,
-        caughtIds.length,
-        allOwnedPokemon.length
-      )
+      // Total de espécies únicas capturadas na Pokédex
+      const totalCaptured = caughtIds.length
 
+      // Total real de Shinies (da Party + PC ou contador oficial do Cobblemon)
       const shiniesCount = Math.max(
-        Number(adv.totalShinyCaptureCount) || 0,
-        shiniesHighlights.length
+        shiniesHighlights.length,
+        Number(adv.totalShinyCaptureCount) || 0
       )
 
-      const legendariesCount = Math.max(
-        Number(adv.totalLegendaryCaptureCount) || 0,
-        legendaries.length
-      )
+      const legendariesCount = legendaries.length
 
       players.push({
         uuid,
