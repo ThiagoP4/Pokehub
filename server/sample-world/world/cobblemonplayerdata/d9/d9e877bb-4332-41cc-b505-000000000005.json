@@ -1,0 +1,37 @@
+{
+  "uuid": "d9e877bb-4332-41cc-b505-000000000005",
+  "rank": "Treinador Estrategista",
+  "isOnline": false,
+  "advancementData": {
+    "totalCaptureCount": 114,
+    "totalShinyCaptureCount": 2,
+    "totalLegendaryCaptureCount": 1,
+    "pokedexProgress": {
+      "kanto": { "seen": 92, "caught": 62 },
+      "johto": { "seen": 52, "caught": 33 },
+      "hoenn": { "seen": 38, "caught": 20 },
+      "sinnoh": { "seen": 28, "caught": 14 },
+      "unova": { "seen": 20, "caught": 9 },
+      "kalos": { "seen": 14, "caught": 6 },
+      "alola": { "seen": 11, "caught": 4 },
+      "galar": { "seen": 9, "caught": 3 },
+      "paldea": { "seen": 8, "caught": 2 }
+    }
+  },
+  "party": [
+    { "species": "cobblemon:feraligatr", "level": 68, "shiny": false, "gender": "M", "nature": "Adamant", "ability": "Sheer Force", "ivPercent": 86 },
+    { "species": "cobblemon:crobat", "level": 65, "shiny": true, "gender": "M", "nature": "Jolly", "ability": "Infiltrator", "ivPercent": 82 },
+    { "species": "cobblemon:ampharos", "level": 66, "shiny": false, "gender": "F", "nature": "Modest", "ability": "Static", "ivPercent": 87 },
+    { "species": "cobblemon:heracross", "level": 64, "shiny": false, "gender": "M", "nature": "Adamant", "ability": "Guts", "ivPercent": 89 },
+    { "species": "cobblemon:espeon", "level": 65, "shiny": false, "gender": "F", "nature": "Timid", "ability": "Magic Bounce", "ivPercent": 85 },
+    { "species": "cobblemon:raikou", "level": 70, "shiny": false, "gender": "N", "nature": "Timid", "ability": "Pressure", "ivPercent": 91 }
+  ],
+  "legendaries": [
+    { "species": "cobblemon:raikou", "level": 70, "shiny": false, "caughtAt": "Planícies Eletrizadas" }
+  ],
+  "shiniesHighlights": [
+    { "species": "cobblemon:crobat", "level": 65 },
+    { "species": "cobblemon:mareep", "level": 28 }
+  ]
+}
+

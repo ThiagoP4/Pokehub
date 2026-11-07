@@ -1,0 +1,41 @@
+{
+  "uuid": "a8e941fa-8812-49cb-b101-000000000001",
+  "rank": "Colecionador de Kanto",
+  "isOnline": true,
+  "advancementData": {
+    "totalCaptureCount": 192,
+    "totalShinyCaptureCount": 6,
+    "totalLegendaryCaptureCount": 2,
+    "pokedexProgress": {
+      "kanto": { "seen": 142, "caught": 118 },
+      "johto": { "seen": 68, "caught": 42 },
+      "hoenn": { "seen": 55, "caught": 32 },
+      "sinnoh": { "seen": 34, "caught": 18 },
+      "unova": { "seen": 28, "caught": 14 },
+      "kalos": { "seen": 20, "caught": 10 },
+      "alola": { "seen": 16, "caught": 8 },
+      "galar": { "seen": 14, "caught": 6 },
+      "paldea": { "seen": 16, "caught": 9 }
+    }
+  },
+  "party": [
+    { "species": "cobblemon:charizard", "level": 78, "shiny": true, "gender": "M", "nature": "Timid", "ability": "Solar Power", "item": "Charcoal", "ivPercent": 92 },
+    { "species": "cobblemon:lapras", "level": 71, "shiny": false, "gender": "F", "nature": "Modest", "ability": "Water Absorb", "item": "Leftovers", "ivPercent": 86 },
+    { "species": "cobblemon:lucario", "level": 74, "shiny": false, "gender": "M", "nature": "Adamant", "ability": "Inner Focus", "item": "Expert Belt", "ivPercent": 91 },
+    { "species": "cobblemon:gengar", "level": 69, "shiny": true, "gender": "M", "nature": "Timid", "ability": "Cursed Body", "item": "Spell Tag", "ivPercent": 84 },
+    { "species": "cobblemon:snorlax", "level": 67, "shiny": false, "gender": "M", "nature": "Careful", "ability": "Thick Fat", "item": "Sitrus Berry", "ivPercent": 80 },
+    { "species": "cobblemon:mewtwo", "level": 85, "shiny": false, "gender": "N", "nature": "Timid", "ability": "Pressure", "item": "Twisted Spoon", "ivPercent": 95 }
+  ],
+  "legendaries": [
+    { "species": "cobblemon:mewtwo", "level": 85, "shiny": false, "caughtAt": "Deep Dark (Y=-42)" },
+    { "species": "cobblemon:articuno", "level": 70, "shiny": false, "caughtAt": "Picos Congelados" }
+  ],
+  "shiniesHighlights": [
+    { "species": "cobblemon:charizard", "level": 78 },
+    { "species": "cobblemon:gengar", "level": 69 },
+    { "species": "cobblemon:gyarados", "level": 58 },
+    { "species": "cobblemon:eevee", "level": 30 },
+    { "species": "cobblemon:pikachu", "level": 45 }
+  ]
+}
+

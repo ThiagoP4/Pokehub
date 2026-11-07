@@ -1,0 +1,40 @@
+{
+  "uuid": "c3d488aa-1221-47ff-e303-000000000003",
+  "rank": "Explorador Lendário",
+  "isOnline": true,
+  "advancementData": {
+    "totalCaptureCount": 158,
+    "totalShinyCaptureCount": 4,
+    "totalLegendaryCaptureCount": 3,
+    "pokedexProgress": {
+      "kanto": { "seen": 112, "caught": 85 },
+      "johto": { "seen": 68, "caught": 48 },
+      "hoenn": { "seen": 62, "caught": 44 },
+      "sinnoh": { "seen": 88, "caught": 70 },
+      "unova": { "seen": 44, "caught": 26 },
+      "kalos": { "seen": 24, "caught": 13 },
+      "alola": { "seen": 20, "caught": 10 },
+      "galar": { "seen": 16, "caught": 8 },
+      "paldea": { "seen": 15, "caught": 7 }
+    }
+  },
+  "party": [
+    { "species": "cobblemon:garchomp", "level": 79, "shiny": false, "gender": "F", "nature": "Jolly", "ability": "Rough Skin", "ivPercent": 95 },
+    { "species": "cobblemon:infernape", "level": 74, "shiny": false, "gender": "M", "nature": "Naive", "ability": "Blaze", "ivPercent": 88 },
+    { "species": "cobblemon:togekiss", "level": 70, "shiny": true, "gender": "F", "nature": "Timid", "ability": "Serene Grace", "ivPercent": 90 },
+    { "species": "cobblemon:milotic", "level": 72, "shiny": false, "gender": "F", "nature": "Bold", "ability": "Marvel Scale", "ivPercent": 91 },
+    { "species": "cobblemon:luxray", "level": 68, "shiny": true, "gender": "M", "nature": "Adamant", "ability": "Intimidate", "ivPercent": 82 },
+    { "species": "cobblemon:dialga", "level": 80, "shiny": false, "gender": "N", "nature": "Modest", "ability": "Pressure", "ivPercent": 93 }
+  ],
+  "legendaries": [
+    { "species": "cobblemon:dialga", "level": 80, "shiny": false, "caughtAt": "Pico de Gelo Ancestral" },
+    { "species": "cobblemon:suicune", "level": 70, "shiny": false, "caughtAt": "Lago da Taiga" },
+    { "species": "cobblemon:zapdos", "level": 72, "shiny": false, "caughtAt": "Savana Tempestuosa" }
+  ],
+  "shiniesHighlights": [
+    { "species": "cobblemon:togekiss", "level": 70 },
+    { "species": "cobblemon:luxray", "level": 68 },
+    { "species": "cobblemon:riolu", "level": 25 }
+  ]
+}
+

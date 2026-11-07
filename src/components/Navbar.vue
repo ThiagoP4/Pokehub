@@ -1,11 +1,14 @@
 <script setup>
-import { ref } from 'vue'
-import { Search, Trophy, BookOpen, Users, Sparkles, Copy, Check } from 'lucide-vue-next'
+import { Search, LayoutDashboard, Users, BookOpen, Sparkles, HardDriveDownload } from 'lucide-vue-next'
 
 const props = defineProps({
   serverInfo: {
     type: Object,
     required: true
+  },
+  players: {
+    type: Array,
+    default: () => []
   },
   searchQuery: {
     type: String,
@@ -17,23 +20,13 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:searchQuery', 'changeTab'])
-
-const copied = ref(false)
-
-function copyIp() {
-  navigator.clipboard.writeText(props.serverInfo.ip)
-  copied.value = true
-  setTimeout(() => {
-    copied.value = false
-  }, 2000)
-}
+const emit = defineEmits(['update:searchQuery', 'changeTab', 'selectPlayer'])
 </script>
 
 <template>
-  <header class="navbar">
-    <div class="container navbar-container">
-      <!-- Logo Cobblemon Style -->
+  <aside class="sidebar">
+    <!-- Topo: Logo PokeHub Neo-Skeuo -->
+    <div class="sidebar-top">
       <div class="brand" @click="emit('changeTab', 'overview')">
         <div class="cube-icon">
           <div class="cube-top"></div>
@@ -41,88 +34,131 @@ function copyIp() {
           <div class="cube-center"></div>
         </div>
         <div class="brand-text">
-          <span class="brand-title">cobblemon</span>
-          <span class="brand-badge">POKEHUB</span>
+          <span class="brand-title">PokeHub</span>
+          <span class="brand-sub">Manual do Servidor</span>
         </div>
       </div>
 
-      <!-- Navigation Links -->
-      <nav class="nav-links">
+      <!-- Campo de Busca Estilo Neo-Skeuo Text Field -->
+      <div class="search-box">
+        <Search :size="16" class="search-icon" />
+        <input 
+          type="text" 
+          placeholder="Buscar amigo ou pokémon..."
+          :value="searchQuery"
+          @input="emit('update:searchQuery', $event.target.value)"
+          class="neo-input search-input"
+        />
+      </div>
+    </div>
+
+    <!-- Navegação em Abas Táteis -->
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Navegação</span>
+
+      <button 
+        :class="['nav-item', { active: activeTab === 'overview' }]"
+        @click="emit('changeTab', 'overview')"
+      >
+        <LayoutDashboard :size="18" />
+        <span>Visão Geral</span>
+      </button>
+
+      <button 
+        :class="['nav-item', { active: activeTab === 'leaderboard' }]"
+        @click="emit('changeTab', 'leaderboard')"
+      >
+        <Users :size="18" />
+        <span>Amigos & Equipes</span>
+      </button>
+
+      <button 
+        :class="['nav-item', { active: activeTab === 'pokedex' }]"
+        @click="emit('changeTab', 'pokedex')"
+      >
+        <BookOpen :size="18" />
+        <span>Pokédex Regional</span>
+      </button>
+
+      <button 
+        :class="['nav-item', { active: activeTab === 'trophies' }]"
+        @click="emit('changeTab', 'trophies')"
+      >
+        <Sparkles :size="18" />
+        <span>Lendários & Shinies</span>
+      </button>
+
+      <button 
+        :class="['nav-item', { active: activeTab === 'backups' }]"
+        @click="emit('changeTab', 'backups')"
+      >
+        <HardDriveDownload :size="18" />
+        <span>Backups do Mapa</span>
+      </button>
+    </nav>
+
+    <!-- Lista de Amigos no Servidor -->
+    <div class="sidebar-friends" v-if="players.length">
+      <div class="friends-header">
+        <span class="nav-section-label">Treinadores</span>
+        <span class="online-counter badge badge-online">
+          {{ serverInfo.onlinePlayers }}/{{ serverInfo.totalPlayers }} Online
+        </span>
+      </div>
+
+      <div class="mini-friends-list">
         <button 
-          :class="['nav-link', { active: activeTab === 'overview' }]"
-          @click="emit('changeTab', 'overview')"
+          v-for="p in players" 
+          :key="p.uuid" 
+          class="mini-friend-btn"
+          @click="emit('selectPlayer', p)"
+          :title="'Ver equipe de ' + p.username"
         >
-          <Sparkles :size="18" />
-          <span>Visão Geral</span>
-        </button>
-
-        <button 
-          :class="['nav-link', { active: activeTab === 'leaderboard' }]"
-          @click="emit('changeTab', 'leaderboard')"
-        >
-          <Trophy :size="18" />
-          <span>Rankings</span>
-        </button>
-
-        <button 
-          :class="['nav-link', { active: activeTab === 'pokedex' }]"
-          @click="emit('changeTab', 'pokedex')"
-        >
-          <BookOpen :size="18" />
-          <span>Pokédex</span>
-        </button>
-
-        <button 
-          :class="['nav-link', { active: activeTab === 'players' }]"
-          @click="emit('changeTab', 'players')"
-        >
-          <Users :size="18" />
-          <span>Treinadores</span>
-        </button>
-      </nav>
-
-      <!-- Right Actions: Search & Server IP -->
-      <div class="nav-actions">
-        <div class="search-box">
-          <Search :size="16" class="search-icon" />
-          <input 
-            type="text" 
-            placeholder="Buscar treinador..."
-            :value="searchQuery"
-            @input="emit('update:searchQuery', $event.target.value)"
-          />
-        </div>
-
-        <button class="server-ip-pill" @click="copyIp" :title="'Clique para copiar o IP: ' + serverInfo.ip">
-          <span class="status-dot"></span>
-          <span class="ip-text">{{ serverInfo.onlinePlayers }} Online</span>
-          <component :is="copied ? Check : Copy" :size="14" class="copy-icon" :class="{ copied }" />
+          <div class="mini-avatar-wrap">
+            <img :src="p.avatar" :alt="p.username" class="mini-avatar" />
+            <span class="mini-dot" :class="{ online: p.isOnline }"></span>
+          </div>
+          <div class="mini-friend-info">
+            <span class="mini-friend-name">{{ p.username }}</span>
+            <span class="mini-friend-meta">{{ p.totalCaptured }} capturados</span>
+          </div>
         </button>
       </div>
     </div>
-  </header>
+
+    <!-- Rodapé da Sidebar: Status Tátil -->
+    <div class="sidebar-footer">
+      <div class="server-status-card neo-card-inset">
+        <span class="status-dot"></span>
+        <div class="status-details">
+          <span class="status-title">Servidor Ativo</span>
+          <span class="status-sub">{{ serverInfo.version }}</span>
+        </div>
+      </div>
+    </div>
+  </aside>
 </template>
 
 <style scoped>
-.navbar {
+.sidebar {
+  width: 280px;
+  height: 100vh;
   position: sticky;
   top: 0;
-  z-index: 100;
-  background: rgba(10, 17, 40, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--glass-border);
-  height: 74px;
+  background: var(--neo-bg);
+  border-right: var(--neo-border);
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  padding: 1.5rem 1.25rem;
+  gap: 1.5rem;
+  z-index: 50;
+  flex-shrink: 0;
 }
 
-.navbar-container {
+.sidebar-top {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  width: 100%;
+  flex-direction: column;
+  gap: 1.15rem;
 }
 
 /* Brand */
@@ -136,42 +172,42 @@ function copyIp() {
 
 .brand-text {
   display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
+  flex-direction: column;
 }
 
 .brand-title {
-  font-size: 1.55rem;
-  font-weight: 800;
+  font-size: 1.65rem;
+  font-weight: 900;
   letter-spacing: -0.04em;
-  color: #ffffff;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  color: var(--neo-ink);
+  line-height: 1.1;
 }
 
-.brand-badge {
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  padding: 0.15rem 0.45rem;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--accent-ocean), var(--accent-cyan));
-  color: #ffffff;
+.brand-sub {
+  font-size: 0.75rem;
+  color: var(--neo-ink-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-/* Cubic Cobblemon Pokéball */
+/* Cubic Pokéball Neo-Skeuo */
 .cube-icon {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   position: relative;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   overflow: hidden;
-  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4), inset 0 0 0 1.5px rgba(0,0,0,0.5);
-  transform: rotate(-6deg);
-  transition: transform 0.3s ease;
+  border: var(--neo-border);
+  box-shadow: 2px 2px 0px var(--neo-ink);
+  transform: rotate(-4deg);
+  transition: var(--transition);
+  flex-shrink: 0;
 }
 
 .brand:hover .cube-icon {
-  transform: rotate(0deg) scale(1.1);
+  transform: rotate(0deg) scale(1.08);
+  box-shadow: 3px 3px 0px var(--neo-ink);
 }
 
 .cube-top {
@@ -180,7 +216,8 @@ function copyIp() {
   left: 0;
   right: 0;
   height: 50%;
-  background: linear-gradient(180deg, #ef4444 0%, #b91c1c 100%);
+  background: #ef4444;
+  border-bottom: 1.5px solid var(--neo-ink);
 }
 
 .cube-bottom {
@@ -189,7 +226,7 @@ function copyIp() {
   left: 0;
   right: 0;
   height: 50%;
-  background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+  background: #ffffff;
 }
 
 .cube-center {
@@ -197,137 +234,236 @@ function copyIp() {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border-radius: 2px;
   background: #ffffff;
-  border: 2px solid #0f172a;
-  box-shadow: 0 0 4px rgba(0,0,0,0.4);
+  border: 2px solid var(--neo-ink);
   z-index: 2;
+  box-shadow: 0 0 0 1px #ffffff;
 }
 
-/* Nav links */
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  background: rgba(255, 255, 255, 0.04);
-  padding: 0.3rem 0.4rem;
-  border-radius: var(--radius-full);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.nav-link {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-full);
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-family: var(--font-family);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.nav-link:hover {
-  color: var(--text-main);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.nav-link.active {
-  color: #ffffff;
-  background: rgba(56, 189, 248, 0.15);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  font-weight: 600;
-}
-
-/* Search and Actions */
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
+/* Search Box Inset */
 .search-box {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.search-box input {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-  padding: 0.5rem 1rem 0.5rem 2.2rem;
-  border-radius: var(--radius-full);
-  color: var(--text-main);
-  font-family: var(--font-family);
-  font-size: 0.85rem;
-  width: 170px;
-  transition: var(--transition);
+.search-input {
+  width: 100%;
+  padding-left: 2.2rem;
 }
 
-.search-box input:focus {
-  outline: none;
-  width: 220px;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
+.search-input::placeholder {
+  color: var(--neo-ink-muted);
 }
 
 .search-icon {
   position: absolute;
   left: 0.75rem;
-  color: var(--text-dim);
+  color: var(--neo-ink-light);
   pointer-events: none;
 }
 
-.server-ip-pill {
+/* Navegação em Abas (Skeuo Tabs) */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-section-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--neo-ink-muted);
+  padding: 0 0.35rem;
+}
+
+.nav-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #34d399;
-  padding: 0.5rem 0.9rem;
-  border-radius: var(--radius-full);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 600;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--neo-surface);
+  border: var(--neo-border);
+  box-shadow: var(--elevation-1);
+  color: var(--neo-ink);
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
+  text-align: left;
 }
 
-.server-ip-pill:hover {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: #34d399;
-  transform: translateY(-1px);
+.nav-item:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--elevation-2);
 }
 
-.status-dot {
+/* Estado Ativo: Efeito "Pressed Surface" */
+.nav-item.active {
+  background: #fef08a; /* Amarelo retrô / destaque */
+  color: var(--neo-ink);
+  box-shadow: 0px 0px 0px var(--neo-ink);
+  transform: translate(2px, 2px);
+}
+
+/* Amigos na Sidebar */
+.sidebar-friends {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.friends-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.online-counter {
+  font-size: 0.7rem;
+}
+
+.mini-friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.mini-friend-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius-sm);
+  background: var(--neo-surface);
+  border: var(--neo-border-thin);
+  box-shadow: 1px 1px 0px var(--neo-ink);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: left;
+}
+
+.mini-friend-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0px var(--neo-ink);
+}
+
+.mini-friend-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 0px 0px 0px var(--neo-ink);
+}
+
+.mini-avatar-wrap {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.mini-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--neo-ink);
+  image-rendering: pixelated;
+  background: var(--neo-bg-alt);
+}
+
+.mini-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #10b981;
-  box-shadow: 0 0 8px #10b981;
-  animation: pulseGlow 2s infinite;
+  background: #a1a1aa;
+  border: 1.5px solid var(--neo-ink);
 }
 
-.copy-icon {
-  color: var(--text-dim);
-  transition: var(--transition);
+.mini-dot.online {
+  background: #10b981;
 }
 
-.copy-icon.copied {
-  color: #34d399;
+.mini-friend-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mini-friend-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--neo-ink);
+}
+
+.mini-friend-meta {
+  font-size: 0.72rem;
+  color: var(--neo-ink-muted);
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+  padding-top: 0.75rem;
+  border-top: var(--neo-border-thin);
+}
+
+.server-status-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 1.5px solid var(--neo-ink);
+  box-shadow: 1px 1px 0px var(--neo-ink);
+  flex-shrink: 0;
+}
+
+.status-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--neo-ink);
+}
+
+.status-sub {
+  font-size: 0.72rem;
+  color: var(--neo-ink-light);
 }
 
 @media (max-width: 900px) {
-  .nav-links {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: var(--neo-border);
+  }
+  .sidebar-friends {
     display: none;
+  }
+  .sidebar-nav {
+    flex-direction: row;
+    overflow-x: auto;
   }
 }
 </style>

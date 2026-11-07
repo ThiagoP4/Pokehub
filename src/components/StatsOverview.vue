@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { Users, Sparkles, Flame, Award, ChevronRight } from 'lucide-vue-next'
+import { Users, Sparkles, Flame, Award, ChevronRight, BookOpen, Crown, Backpack, Clock } from 'lucide-vue-next'
 import { getPokemonSprite } from '../data/mockData'
 
 const props = defineProps({
@@ -16,7 +16,7 @@ const props = defineProps({
 
 const emit = defineEmits(['selectPlayer', 'changeTab'])
 
-// Métricas agregadas
+// Métricas somadas do grupo de amigos
 const totalCaptured = computed(() => {
   return props.players.reduce((acc, p) => acc + p.totalCaptured, 0)
 })
@@ -29,12 +29,12 @@ const totalLegendaries = computed(() => {
   return props.players.reduce((acc, p) => acc + p.legendariesCount, 0)
 })
 
-// Top Shiny Hunter
+// Mais Shinies entre os amigos
 const topShinyHunter = computed(() => {
   return [...props.players].sort((a, b) => b.shiniesCount - a.shiniesCount)[0]
 })
 
-// Top Treinador
+// Mais Capturas entre os amigos
 const topTrainer = computed(() => {
   return [...props.players].sort((a, b) => b.totalCaptured - a.totalCaptured)[0]
 })
@@ -42,119 +42,140 @@ const topTrainer = computed(() => {
 
 <template>
   <section class="overview-section">
-    <div class="container">
-      <!-- 4 Main Metric Cards -->
-      <div class="stats-grid">
-        <!-- Card 1: Total Treinadores -->
-        <div class="stat-card glass-panel">
-          <div class="stat-icon-wrapper blue">
-            <Users :size="24" />
-          </div>
-          <div class="stat-info">
-            <span class="stat-label">Treinadores Ativos</span>
-            <span class="stat-value">{{ serverInfo.totalRegistered }}</span>
-            <span class="stat-subtext">🟢 {{ serverInfo.onlinePlayers }} no servidor agora</span>
-          </div>
+    <!-- 4 Métricas Principais (Raised Surfaces com Sombra em Bloco) -->
+    <div class="stats-grid">
+      <!-- Card 1: Amigos no Mundo -->
+      <div class="stat-card neo-card">
+        <div class="stat-icon-wrapper blue-icon">
+          <Users :size="22" />
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Amigos no Servidor</span>
+          <span class="stat-value">{{ serverInfo.totalPlayers }}</span>
+          <span class="stat-subtext">
+            <span class="status-indicator-dot"></span>
+            {{ serverInfo.onlinePlayers }} online agora
+          </span>
+        </div>
+      </div>
+
+      <!-- Card 2: Total de Capturas -->
+      <div class="stat-card neo-card">
+        <div class="stat-icon-wrapper red-icon">
+          <Flame :size="22" />
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Total de Capturas</span>
+          <span class="stat-value">{{ totalCaptured.toLocaleString() }}</span>
+          <span class="stat-subtext">Equipes e Caixas do PC</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Shinies da Galera -->
+      <div class="stat-card neo-card">
+        <div class="stat-icon-wrapper yellow-icon">
+          <Sparkles :size="22" />
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Shinies Raros</span>
+          <span class="stat-value text-shiny">{{ totalShinies }}</span>
+          <span class="stat-subtext">Variantes cromáticas</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Lendários Capturados -->
+      <div class="stat-card neo-card">
+        <div class="stat-icon-wrapper purple-icon">
+          <Award :size="22" />
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Lendários Despertados</span>
+          <span class="stat-value text-legendary">{{ totalLegendaries }}</span>
+          <span class="stat-subtext">Monarcas do nosso mapa</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards de Destaque (Spotlight) estilo Neo-Skeuo Card & List -->
+    <div class="spotlight-grid">
+      <!-- Spotlight 1: Líder da Pokédex -->
+      <div class="spotlight-card neo-card-raised" v-if="topTrainer">
+        <div class="spotlight-header">
+          <span class="badge badge-legendary">
+            <BookOpen :size="13" />
+            <span>Líder da Pokédex</span>
+          </span>
+          <button class="inspect-link-btn" @click="emit('selectPlayer', topTrainer)">
+            <span>Ver Ficha</span>
+            <ChevronRight :size="15" />
+          </button>
         </div>
 
-        <!-- Card 2: Pokémons Capturados -->
-        <div class="stat-card glass-panel">
-          <div class="stat-icon-wrapper emerald">
-            <Flame :size="24" />
+        <div class="spotlight-body">
+          <img :src="topTrainer.avatar" :alt="topTrainer.username" class="trainer-avatar" />
+          <div class="trainer-info">
+            <h3 class="trainer-name">{{ topTrainer.username }}</h3>
+            <p class="trainer-rank">{{ topTrainer.rank }}</p>
+            <div class="trainer-pills">
+              <span class="badge">
+                <Backpack :size="12" />
+                <span>{{ topTrainer.totalCaptured }} capturas</span>
+              </span>
+              <span class="badge">
+                <Clock :size="12" />
+                <span>{{ topTrainer.playTime }}</span>
+              </span>
+            </div>
           </div>
-          <div class="stat-info">
-            <span class="stat-label">Pokémons Registrados</span>
-            <span class="stat-value">{{ totalCaptured.toLocaleString() }}</span>
-            <span class="stat-subtext">Entre equipes e PCs</span>
-          </div>
-        </div>
-
-        <!-- Card 3: Shinies Encontrados -->
-        <div class="stat-card glass-panel">
-          <div class="stat-icon-wrapper yellow">
-            <Sparkles :size="24" />
-          </div>
-          <div class="stat-info">
-            <span class="stat-label">Shinies Raros</span>
-            <span class="stat-value glow-yellow">{{ totalShinies }}</span>
-            <span class="stat-subtext">1 / 8192 taxa padrão Cobblemon</span>
-          </div>
-        </div>
-
-        <!-- Card 4: Lendários Despertados -->
-        <div class="stat-card glass-panel">
-          <div class="stat-icon-wrapper purple">
-            <Award :size="24" />
-          </div>
-          <div class="stat-info">
-            <span class="stat-label">Lendários Despertados</span>
-            <span class="stat-value glow-cyan">{{ totalLegendaries }}</span>
-            <span class="stat-subtext">Monarcas dos Biomas</span>
+          
+          <!-- Ace Pokémon Inset Frame -->
+          <div class="trainer-ace neo-card-inset" v-if="topTrainer.party && topTrainer.party.length">
+            <span class="ace-label">Parceiro</span>
+            <img :src="getPokemonSprite(topTrainer.party[0].id, topTrainer.party[0].shiny)" class="ace-sprite animate-float" :alt="topTrainer.party[0].name" />
+            <span class="ace-name">Lv.{{ topTrainer.party[0].level }} {{ topTrainer.party[0].name }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Spotlight Cards (Destaques da Semana) -->
-      <div class="spotlight-grid">
-        <!-- Spotlight 1: Mestre da Temporada -->
-        <div class="spotlight-card glass-panel" v-if="topTrainer">
-          <div class="spotlight-header">
-            <div class="badge badge-legendary">Líder do Servidor</div>
-            <button class="view-profile-btn" @click="emit('selectPlayer', topTrainer)">
-              Ver Perfil <ChevronRight :size="16" />
-            </button>
-          </div>
-
-          <div class="spotlight-body">
-            <img :src="topTrainer.avatar" :alt="topTrainer.username" class="trainer-avatar" />
-            <div class="trainer-info">
-              <h3 class="trainer-name">{{ topTrainer.username }}</h3>
-              <p class="trainer-rank">{{ topTrainer.rank }}</p>
-              <div class="trainer-pills">
-                <span class="pill">🎒 {{ topTrainer.totalCaptured }} Capturados</span>
-                <span class="pill">⏱️ {{ topTrainer.playTime }}</span>
-              </div>
-            </div>
-            
-            <!-- Ace Pokémon -->
-            <div class="trainer-ace" v-if="topTrainer.party && topTrainer.party.length">
-              <span class="ace-label">Pokémon Ás</span>
-              <img :src="getPokemonSprite(topTrainer.party[0].id)" class="ace-sprite" :alt="topTrainer.party[0].name" />
-              <span class="ace-name">Lv. {{ topTrainer.party[0].level }} {{ topTrainer.party[0].name }}</span>
-            </div>
-          </div>
+      <!-- Spotlight 2: Mais Sortudo nos Shinies -->
+      <div class="spotlight-card neo-card-raised" v-if="topShinyHunter">
+        <div class="spotlight-header">
+          <span class="badge badge-shiny">
+            <Sparkles :size="13" />
+            <span>Mestre dos Shinies</span>
+          </span>
+          <button class="inspect-link-btn" @click="emit('selectPlayer', topShinyHunter)">
+            <span>Ver Coleção</span>
+            <ChevronRight :size="15" />
+          </button>
         </div>
 
-        <!-- Spotlight 2: Rei dos Shinies -->
-        <div class="spotlight-card glass-panel" v-if="topShinyHunter">
-          <div class="spotlight-header">
-            <div class="badge badge-shiny">🌟 Caçador de Shinies #1</div>
-            <button class="view-profile-btn" @click="emit('selectPlayer', topShinyHunter)">
-              Ver Perfil <ChevronRight :size="16" />
-            </button>
+        <div class="spotlight-body">
+          <img :src="topShinyHunter.avatar" :alt="topShinyHunter.username" class="trainer-avatar" />
+          <div class="trainer-info">
+            <h3 class="trainer-name">{{ topShinyHunter.username }}</h3>
+            <p class="trainer-rank">{{ topShinyHunter.rank }}</p>
+            <div class="trainer-pills">
+              <span class="badge badge-shiny">
+                <Sparkles :size="12" />
+                <span>{{ topShinyHunter.shiniesCount }} Shinies</span>
+              </span>
+              <span class="badge">
+                <Crown :size="12" />
+                <span>{{ topShinyHunter.legendariesCount }} Lendários</span>
+              </span>
+            </div>
           </div>
 
-          <div class="spotlight-body">
-            <img :src="topShinyHunter.avatar" :alt="topShinyHunter.username" class="trainer-avatar" />
-            <div class="trainer-info">
-              <h3 class="trainer-name">{{ topShinyHunter.username }}</h3>
-              <p class="trainer-rank">Mestre Brilhante</p>
-              <div class="trainer-pills">
-                <span class="pill shiny-pill">✨ {{ topShinyHunter.shiniesCount }} Shinies</span>
-                <span class="pill">👑 {{ topShinyHunter.legendariesCount }} Lendários</span>
-              </div>
-            </div>
-
-            <!-- Shiny Highlight Sprite -->
-            <div class="trainer-ace" v-if="topShinyHunter.shiniesHighlights && topShinyHunter.shiniesHighlights.length">
-              <span class="ace-label">Destaque Raro</span>
-              <img 
-                :src="getPokemonSprite(topShinyHunter.shiniesHighlights[0].id, true)" 
-                class="ace-sprite animate-float" 
-                :alt="topShinyHunter.shiniesHighlights[0].name" 
-              />
-              <span class="ace-name shiny-name">✨ Shiny {{ topShinyHunter.shiniesHighlights[0].name }}</span>
-            </div>
+          <!-- Shiny Inset Frame -->
+          <div class="trainer-ace neo-card-inset" v-if="topShinyHunter.shiniesHighlights && topShinyHunter.shiniesHighlights.length">
+            <span class="ace-label">Destaque</span>
+            <img 
+              :src="getPokemonSprite(topShinyHunter.shiniesHighlights[0].id, true)" 
+              class="ace-sprite animate-float" 
+              :alt="topShinyHunter.shiniesHighlights[0].name" 
+            />
+            <span class="ace-name text-shiny">Shiny {{ topShinyHunter.shiniesHighlights[0].name }}</span>
           </div>
         </div>
       </div>
@@ -164,55 +185,57 @@ const topTrainer = computed(() => {
 
 <style scoped>
 .overview-section {
-  padding: 2.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: -3.25rem;
+  position: relative;
+  z-index: 5;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.25rem;
-  margin-bottom: 2rem;
 }
 
 .stat-card {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  padding: 1.5rem;
+  gap: 1.15rem;
+  padding: 1.35rem 1.4rem;
 }
 
 .stat-icon-wrapper {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-md);
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
+  border: var(--neo-border);
+  box-shadow: 2px 2px 0px var(--neo-ink);
   flex-shrink: 0;
 }
 
-.stat-icon-wrapper.blue {
-  background: rgba(2, 132, 199, 0.2);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+.blue-icon {
+  background: #bae6fd;
+  color: #0369a1;
 }
 
-.stat-icon-wrapper.emerald {
-  background: rgba(16, 185, 129, 0.2);
-  color: #34d399;
-  border: 1px solid rgba(52, 211, 153, 0.3);
+.red-icon {
+  background: #fecaca;
+  color: #b91c1c;
 }
 
-.stat-icon-wrapper.yellow {
-  background: rgba(250, 204, 21, 0.2);
-  color: #facc15;
-  border: 1px solid rgba(250, 204, 21, 0.3);
+.yellow-icon {
+  background: #fef08a;
+  color: #854d0e;
 }
 
-.stat-icon-wrapper.purple {
-  background: rgba(192, 132, 252, 0.2);
-  color: #c084fc;
-  border: 1px solid rgba(192, 132, 252, 0.3);
+.purple-icon {
+  background: #e9d5ff;
+  color: #6b21a8;
 }
 
 .stat-info {
@@ -221,76 +244,97 @@ const topTrainer = computed(() => {
 }
 
 .stat-label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--neo-ink-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .stat-value {
-  font-size: 1.9rem;
-  font-weight: 800;
+  font-size: 1.85rem;
+  font-weight: 900;
   letter-spacing: -0.02em;
-  color: #ffffff;
-  line-height: 1.2;
+  color: var(--neo-ink);
+  line-height: 1.15;
 }
 
 .stat-subtext {
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--neo-ink-muted);
+  font-weight: 600;
+  margin-top: 0.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.status-indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+}
+
+.text-shiny {
+  color: #b45309;
+}
+
+.text-legendary {
+  color: #6b21a8;
 }
 
 /* Spotlight Cards */
 .spotlight-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .spotlight-card {
   padding: 1.5rem;
-  position: relative;
-  overflow: hidden;
 }
 
 .spotlight-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.15rem;
 }
 
-.view-profile-btn {
+.inspect-link-btn {
   display: flex;
   align-items: center;
   gap: 0.25rem;
   background: transparent;
   border: none;
-  color: var(--accent-cyan);
+  color: var(--neo-ink);
   font-family: var(--font-family);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 800;
   cursor: pointer;
   transition: var(--transition);
 }
 
-.view-profile-btn:hover {
-  color: #ffffff;
+.inspect-link-btn:hover {
   transform: translateX(3px);
+  color: var(--neo-blue);
 }
 
 .spotlight-body {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.15rem;
 }
 
 .trainer-avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: var(--radius-md);
-  background: #0f172a;
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  width: 68px;
+  height: 68px;
+  border-radius: var(--radius-sm);
+  background: var(--neo-bg-alt);
+  border: var(--neo-border);
+  box-shadow: 2px 2px 0px var(--neo-ink);
   image-rendering: pixelated;
   flex-shrink: 0;
 }
@@ -301,13 +345,14 @@ const topTrainer = computed(() => {
 
 .trainer-name {
   font-size: 1.25rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-weight: 800;
+  color: var(--neo-ink);
 }
 
 .trainer-rank {
-  font-size: 0.85rem;
-  color: var(--accent-cyan);
+  font-size: 0.82rem;
+  color: var(--neo-blue);
+  font-weight: 700;
   margin-bottom: 0.5rem;
 }
 
@@ -317,51 +362,32 @@ const topTrainer = computed(() => {
   gap: 0.4rem;
 }
 
-.pill {
-  font-size: 0.75rem;
-  padding: 0.2rem 0.55rem;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-muted);
-}
-
-.shiny-pill {
-  background: rgba(250, 204, 21, 0.15);
-  color: #fde047;
-  border: 1px solid rgba(250, 204, 21, 0.3);
-}
-
 .trainer-ace {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(0, 0, 0, 0.25);
   padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
 }
 
 .ace-label {
   font-size: 0.65rem;
-  color: var(--text-dim);
+  color: var(--neo-ink-muted);
   text-transform: uppercase;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .ace-sprite {
-  width: 58px;
-  height: 58px;
+  width: 52px;
+  height: 52px;
   object-fit: contain;
 }
 
 .ace-name {
   font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.shiny-name {
-  color: #fde047;
+  font-weight: 800;
+  color: var(--neo-ink);
 }
 
 @media (max-width: 600px) {

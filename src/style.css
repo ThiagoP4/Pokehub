@@ -1,43 +1,61 @@
 /* =========================================================
-   POKEHUB - COBBLEMON THEME STYLES (PURE CSS)
-   Inspirado no visual oficial de cobblemon.com
+   POKEHUB - NEO-SKEUO UI KIT (PURE CSS)
+   Inspirado no Design System Neo-Skeuomorphism:
+   - Papel de campo / Off-white acolhedor (#F7F4EB)
+   - Contornos de tinta preta nítidos (1.5px, 2px, 3px)
+   - Sombras projetadas sólidas (Elevation Levels 1, 2, 3)
+   - Efeito tátil de relevo (Raised) e afundamento (Pressed/Inset)
    ========================================================= */
 
 :root {
-  /* Cores Principais Cobblemon */
-  --bg-primary: #0a1128;
-  --bg-secondary: #0e1b3d;
-  --bg-card: rgba(18, 30, 64, 0.7);
-  --bg-card-hover: rgba(28, 45, 92, 0.85);
+  /* Paleta Base Neo-Skeuo (Papel, Tinta e Superfícies) */
+  --neo-bg: #f5f0e6;
+  --neo-bg-alt: #ece5d6;
+  --neo-surface: #ffffff;
+  --neo-surface-raised: #ffffff;
+  --neo-surface-inset: #ede7d8;
   
-  --accent-blue: #38bdf8;
-  --accent-cyan: #22d3ee;
-  --accent-ocean: #0284c7;
-  --accent-cobble-red: #ef4444;
-  --accent-shiny: #facc15;
-  --accent-legendary: #c084fc;
-  --accent-emerald: #10b981;
+  --neo-ink: #18181b;
+  --neo-ink-light: #52525b;
+  --neo-ink-muted: #71717a;
   
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  /* Cores de Destaque Tátil (Retro Game & Pokémon) */
+  --neo-red: #ef4444;
+  --neo-red-light: #fef2f2;
+  --neo-blue: #0284c7;
+  --neo-blue-light: #f0f9ff;
+  --neo-cyan: #06b6d4;
+  --neo-yellow: #eab308;
+  --neo-yellow-light: #fefce8;
+  --neo-green: #10b981;
+  --neo-green-light: #ecfdf5;
+  --neo-purple: #8b5cf6;
+  --neo-purple-light: #f5f3ff;
+  --neo-orange: #f97316;
+
+  /* Bordas Nítidas do UI Kit */
+  --neo-border-thin: 1.5px solid var(--neo-ink);
+  --neo-border: 2px solid var(--neo-ink);
+  --neo-border-thick: 3px solid var(--neo-ink);
   
-  /* Glassmorphism */
-  --glass-bg: rgba(15, 23, 42, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-border-hover: rgba(56, 189, 248, 0.4);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  /* Elevation Levels (Sombras em Bloco / Offset do UI Kit) */
+  --elevation-1: 2px 2px 0px var(--neo-ink);
+  --elevation-2: 4px 4px 0px var(--neo-ink);
+  --elevation-3: 6px 6px 0px var(--neo-ink);
+  --inset-shadow: inset 2px 2px 0px rgba(24, 24, 27, 0.15), inset -1px -1px 0px rgba(255, 255, 255, 0.8);
   
-  /* Raios e Transições */
+  /* Raios de Arredondamento */
+  --radius-xs: 4px;
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-full: 9999px;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   
   /* Tipografia */
-  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+  
+  --transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -48,173 +66,165 @@
 
 body {
   font-family: var(--font-family);
-  background-color: var(--bg-primary);
-  color: var(--text-main);
+  background-color: var(--neo-bg);
+  color: var(--neo-ink);
   line-height: 1.5;
-  overflow-x: hidden;
   min-height: 100vh;
+  /* Textura de papel milimetrado/pontilhado sutil */
   background-image: 
-    radial-gradient(circle at 15% 50%, rgba(2, 132, 199, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 85% 30%, rgba(192, 132, 252, 0.12) 0%, transparent 40%),
-    radial-gradient(circle at 50% 90%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
-  background-attachment: fixed;
+    radial-gradient(#d4cbbe 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar no estilo Neo-Skeuo */
 ::-webkit-scrollbar {
   width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: var(--neo-bg-alt);
+  border-left: var(--neo-border-thin);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 5px;
-  border: 2px solid var(--bg-primary);
+  background: #d4cbbe;
+  border: var(--neo-border-thin);
+  border-radius: var(--radius-xs);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-ocean);
+  background: var(--neo-ink-muted);
 }
 
-/* Containers */
-.container {
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-/* Glass Card */
-.glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--radius-lg);
+/* Base Surfaces (Do Kit: Base, Raised, Inset, Pressed) */
+.neo-card {
+  background: var(--neo-surface);
+  border: var(--neo-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-2);
   transition: var(--transition);
 }
 
-.glass-panel:hover {
-  border-color: var(--glass-border-hover);
+.neo-card-raised {
+  background: var(--neo-surface-raised);
+  border: var(--neo-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-3);
+  transition: var(--transition);
 }
 
-/* Buttons */
+.neo-card-inset {
+  background: var(--neo-surface-inset);
+  border: var(--neo-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--inset-shadow);
+}
+
+/* Botões Táteis com Efeito Pressed Fiel ao UI Kit */
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   font-family: var(--font-family);
-  font-weight: 600;
-  font-size: 0.95rem;
-  padding: 0.7rem 1.4rem;
-  border-radius: var(--radius-md);
-  border: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-sm);
+  border: var(--neo-border);
+  box-shadow: var(--elevation-2);
   cursor: pointer;
   transition: var(--transition);
   text-decoration: none;
+  user-select: none;
+}
+
+.btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--elevation-3);
+}
+
+.btn:active,
+.btn-pressed {
+  transform: translate(3px, 3px) !important;
+  box-shadow: 0px 0px 0px var(--neo-ink) !important;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+  background: var(--neo-surface);
+  color: var(--neo-ink);
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.6);
-  filter: brightness(1.1);
-}
-
-.btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-main);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(8px);
-}
-
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
+  background: var(--neo-bg-alt);
 }
 
 .btn-accent {
-  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+  background: var(--neo-red);
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
 }
 
 .btn-accent:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+  background: #dc2626;
 }
 
-/* Badges */
+.btn-blue {
+  background: #38bdf8;
+  color: var(--neo-ink);
+}
+
+/* Inputs Táteis */
+.neo-input {
+  background: var(--neo-surface);
+  border: var(--neo-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--inset-shadow);
+  padding: 0.55rem 0.85rem;
+  font-family: var(--font-family);
+  font-size: 0.88rem;
+  color: var(--neo-ink);
+  transition: var(--transition);
+}
+
+.neo-input:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: var(--neo-ink);
+  box-shadow: inset 2px 2px 0px rgba(24, 24, 27, 0.25), 0 0 0 2px var(--neo-yellow);
+}
+
+/* Badges e Pílulas Táteis */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.25rem 0.65rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
   border-radius: var(--radius-full);
+  border: var(--neo-border-thin);
+  box-shadow: 1px 1px 0px var(--neo-ink);
 }
 
 .badge-shiny {
-  background: rgba(250, 204, 21, 0.15);
-  color: #fde047;
-  border: 1px solid rgba(250, 204, 21, 0.4);
-  box-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
+  background: #fef08a;
+  color: #854d0e;
 }
 
 .badge-legendary {
-  background: rgba(192, 132, 252, 0.15);
-  color: #d8b4fe;
-  border: 1px solid rgba(192, 132, 252, 0.4);
-  box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);
+  background: #e9d5ff;
+  color: #581c87;
 }
 
 .badge-online {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: #a7f3d0;
+  color: #065f46;
 }
 
-/* Pokéball Cúbica (Voxel/Pixel Cobblemon) */
-.cube-ball {
-  width: 24px;
-  height: 24px;
-  position: relative;
-  display: inline-block;
-}
-
-/* Glow effects */
-.glow-cyan {
-  text-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
-}
-
-.glow-yellow {
-  text-shadow: 0 0 20px rgba(250, 204, 21, 0.6);
-}
-
-/* Animations */
-@keyframes float {
+/* Animação suave para sprites */
+@keyframes floatGentle {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.8)); }
+  50% { transform: translateY(-4px); }
 }
 
 .animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 2.5s ease-in-out infinite;
+  animation: floatGentle 3s ease-in-out infinite;
 }

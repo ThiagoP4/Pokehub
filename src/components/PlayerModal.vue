@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { X, Sparkles, Award, Shield, Heart, Zap, Crosshair } from 'lucide-vue-next'
+import { X, Sparkles, Crown, MapPin } from 'lucide-vue-next'
 import { getPokemonSprite, typeColors, regions } from '../data/mockData'
 
 const props = defineProps({
@@ -17,7 +17,8 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
 
 <template>
   <div v-if="player" class="modal-backdrop" @click.self="emit('close')">
-    <div class="modal-card glass-panel">
+    <!-- Modal no formato Neo-Skeuo Modal Confirmation (Borda Dupla e Sombra Marcante) -->
+    <div class="modal-card neo-card-raised">
       <!-- Modal Header -->
       <div class="modal-header">
         <div class="player-header-info">
@@ -28,7 +29,7 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
           <div>
             <div class="player-title-row">
               <h2 class="modal-username">{{ player.username }}</h2>
-              <span class="badge" :class="player.isOnline ? 'badge-online' : 'badge-offline'">
+              <span class="badge" :class="player.isOnline ? 'badge-online' : ''">
                 {{ player.isOnline ? 'Online no Servidor' : 'Offline' }}
               </span>
             </div>
@@ -36,28 +37,34 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
           </div>
         </div>
 
-        <button class="close-btn" @click="emit('close')">
-          <X :size="20" />
+        <button class="btn btn-primary close-btn" @click="emit('close')">
+          <X :size="18" />
         </button>
       </div>
 
-      <!-- Quick Metrics Ribbon -->
-      <div class="metrics-ribbon">
+      <!-- Quick Metrics Ribbon Inset -->
+      <div class="metrics-ribbon neo-card-inset">
         <div class="metric-item">
           <span class="m-val">{{ player.totalCaptured }}</span>
           <span class="m-lbl">Capturados</span>
         </div>
         <div class="metric-item">
-          <span class="m-val text-shiny">✨ {{ player.shiniesCount }}</span>
+          <span class="m-val text-shiny stat-icon-val">
+            <Sparkles :size="15" />
+            <span>{{ player.shiniesCount }}</span>
+          </span>
           <span class="m-lbl">Shinies</span>
         </div>
         <div class="metric-item">
-          <span class="m-val text-legendary">👑 {{ player.legendariesCount }}</span>
+          <span class="m-val text-legendary stat-icon-val">
+            <Crown :size="15" />
+            <span>{{ player.legendariesCount }}</span>
+          </span>
           <span class="m-lbl">Lendários</span>
         </div>
       </div>
 
-      <!-- Modal Tabs -->
+      <!-- Abas Internas estilo Kit -->
       <div class="modal-tabs">
         <button 
           :class="['m-tab', { active: activeModalTab === 'party' }]"
@@ -69,13 +76,15 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
           :class="['m-tab', { active: activeModalTab === 'legendaries' }]"
           @click="activeModalTab = 'legendaries'"
         >
-          👑 Lendários ({{ player.legendaries ? player.legendaries.length : 0 }})
+          <Crown :size="14" />
+          <span>Lendários ({{ player.legendaries ? player.legendaries.length : 0 }})</span>
         </button>
         <button 
           :class="['m-tab', { active: activeModalTab === 'shinies' }]"
           @click="activeModalTab = 'shinies'"
         >
-          ✨ Shinies ({{ player.shiniesHighlights ? player.shiniesHighlights.length : 0 }})
+          <Sparkles :size="14" />
+          <span>Shinies ({{ player.shiniesHighlights ? player.shiniesHighlights.length : 0 }})</span>
         </button>
         <button 
           :class="['m-tab', { active: activeModalTab === 'pokedex' }]"
@@ -85,32 +94,37 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
         </button>
       </div>
 
-      <!-- Tab Content: Party -->
+      <!-- Conteúdo da Aba: Party -->
       <div v-if="activeModalTab === 'party'" class="tab-pane">
         <div class="party-grid">
           <div 
             v-for="(poke, index) in player.party" 
             :key="index"
-            class="party-card"
-            :class="{ 'shiny-border': poke.shiny, 'legendary-border': poke.isLegendary }"
+            class="party-card neo-card"
           >
             <div class="poke-card-top">
               <span class="poke-lvl">Lv. {{ poke.level }}</span>
               <div class="poke-badges">
-                <span v-if="poke.shiny" class="mini-tag shiny">✨ Shiny</span>
-                <span v-if="poke.isLegendary" class="mini-tag legendary">👑 Lendário</span>
+                <span v-if="poke.shiny" class="badge badge-shiny">
+                  <Sparkles :size="11" />
+                  <span>Shiny</span>
+                </span>
+                <span v-if="poke.isLegendary" class="badge badge-legendary">
+                  <Crown :size="11" />
+                  <span>Lendário</span>
+                </span>
               </div>
             </div>
 
-            <!-- Sprite -->
-            <div class="poke-sprite-container">
-              <img :src="getPokemonSprite(poke.id, poke.shiny)" :alt="poke.name" class="poke-sprite" />
+            <!-- Sprite Box Inset -->
+            <div class="poke-sprite-container neo-card-inset">
+              <img :src="getPokemonSprite(poke.id, poke.shiny)" :alt="poke.name" class="poke-sprite animate-float" />
             </div>
 
             <div class="poke-details">
               <h4 class="poke-name">{{ poke.name }}</h4>
               
-              <!-- Types -->
+              <!-- Tipos com Pílulas Táteis -->
               <div class="poke-types">
                 <span 
                   v-for="t in poke.types" 
@@ -122,68 +136,77 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
                 </span>
               </div>
 
-              <!-- IVs & Details -->
               <div class="poke-stats-row">
-                <span class="poke-attr">IV: <strong>{{ poke.ivPercent }}%</strong></span>
-                <span class="poke-attr">Natureza: <strong>{{ poke.nature }}</strong></span>
+                <span>IVs: <strong>{{ poke.ivPercent }}%</strong></span>
+                <span>Natureza: <strong>{{ poke.nature }}</strong></span>
               </div>
               <div class="poke-stats-row">
-                <span class="poke-attr">Habilidade: <strong>{{ poke.ability }}</strong></span>
+                <span>Habilidade: <strong>{{ poke.ability }}</strong></span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Tab Content: Legendaries -->
+      <!-- Conteúdo da Aba: Lendários -->
       <div v-if="activeModalTab === 'legendaries'" class="tab-pane">
         <div v-if="player.legendaries && player.legendaries.length" class="trophy-grid">
           <div 
             v-for="(leg, index) in player.legendaries" 
             :key="index"
-            class="trophy-card glass-panel"
+            class="trophy-card neo-card"
           >
-            <img :src="getPokemonSprite(leg.id, leg.shiny)" :alt="leg.name" class="trophy-sprite animate-float" />
+            <div class="trophy-sprite-box neo-card-inset">
+              <img :src="getPokemonSprite(leg.id, leg.shiny)" :alt="leg.name" class="trophy-sprite animate-float" />
+            </div>
             <div class="trophy-info">
               <div class="trophy-title-row">
                 <h4 class="trophy-name">{{ leg.name }}</h4>
                 <span class="badge badge-legendary">Nível {{ leg.level }}</span>
               </div>
-              <p class="trophy-location">📍 Capturado em: <strong>{{ leg.caughtAt }}</strong></p>
+              <p class="trophy-location">
+                <MapPin :size="13" class="location-icon" />
+                <span>Capturado em: <strong>{{ leg.caughtAt }}</strong></span>
+              </p>
             </div>
           </div>
         </div>
         <p v-else class="empty-state">Nenhum lendário registrado ainda.</p>
       </div>
 
-      <!-- Tab Content: Shinies -->
+      <!-- Conteúdo da Aba: Shinies -->
       <div v-if="activeModalTab === 'shinies'" class="tab-pane">
         <div v-if="player.shiniesHighlights && player.shiniesHighlights.length" class="trophy-grid">
           <div 
             v-for="(sh, index) in player.shiniesHighlights" 
             :key="index"
-            class="trophy-card glass-panel shiny-highlight"
+            class="trophy-card neo-card"
           >
-            <img :src="getPokemonSprite(sh.id, true)" :alt="sh.name" class="trophy-sprite animate-float" />
+            <div class="trophy-sprite-box neo-card-inset">
+              <img :src="getPokemonSprite(sh.id, true)" :alt="sh.name" class="trophy-sprite animate-float" />
+            </div>
             <div class="trophy-info">
               <div class="trophy-title-row">
-                <h4 class="trophy-name text-shiny">✨ {{ sh.name }}</h4>
+                <h4 class="trophy-name text-shiny">
+                  <Sparkles :size="15" />
+                  <span>{{ sh.name }}</span>
+                </h4>
                 <span class="badge badge-shiny">Lv. {{ sh.level }}</span>
               </div>
-              <p class="trophy-location">Forma cromática raríssima com partículas brilhantes</p>
+              <p class="trophy-location">Forma cromática com partículas especiais</p>
             </div>
           </div>
         </div>
         <p v-else class="empty-state">Nenhum shiny registrado ainda.</p>
       </div>
 
-      <!-- Tab Content: Regional Pokedex -->
+      <!-- Conteúdo da Aba: Pokédex Regional -->
       <div v-if="activeModalTab === 'pokedex'" class="tab-pane">
         <div class="regional-breakdown-grid">
           <div 
             v-for="region in regions" 
             :key="region.id"
-            class="region-progress-box glass-panel"
+            class="region-progress-box neo-card"
           >
             <div class="box-top">
               <span class="box-reg-name">{{ region.name }}</span>
@@ -191,7 +214,7 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
                 {{ player.pokedexProgress[region.id]?.caught || 0 }} / {{ region.total }}
               </span>
             </div>
-            <div class="box-progress-bar">
+            <div class="box-progress-track neo-card-inset">
               <div 
                 class="box-fill" 
                 :style="{ 
@@ -215,9 +238,8 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(4, 9, 23, 0.82);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(24, 24, 27, 0.65);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -230,9 +252,10 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  background: rgba(14, 23, 48, 0.95);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  background: var(--neo-surface);
+  border: var(--neo-border-thick);
+  box-shadow: 8px 8px 0px var(--neo-ink);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
@@ -240,86 +263,74 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 1.75rem;
-  border-bottom: 1px solid var(--glass-border);
+  padding: 1.35rem 1.6rem;
+  border-bottom: var(--neo-border);
+  background: var(--neo-bg);
 }
 
 .player-header-info {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1.15rem;
 }
 
 .avatar-box {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: 54px;
+  height: 54px;
 }
 
 .modal-avatar {
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-md);
-  background: #0b1329;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  background: var(--neo-bg-alt);
+  border: var(--neo-border);
+  box-shadow: 2px 2px 0px var(--neo-ink);
   image-rendering: pixelated;
 }
 
 .modal-online-indicator {
   position: absolute;
-  bottom: -3px;
-  right: -3px;
-  width: 13px;
-  height: 13px;
+  bottom: -2px;
+  right: -2px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: #10b981;
-  border: 2px solid #0e1730;
-  box-shadow: 0 0 8px #10b981;
+  border: 1.5px solid var(--neo-ink);
 }
 
 .player-title-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.65rem;
 }
 
 .modal-username {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: #ffffff;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--neo-ink);
 }
 
 .modal-rank {
-  font-size: 0.85rem;
-  color: var(--accent-cyan);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--neo-ink-light);
 }
 
 .close-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--glass-border);
-  color: var(--text-muted);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.close-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border-color: #ef4444;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
 }
 
 /* Metrics Ribbon */
 .metrics-ribbon {
   display: flex;
-  background: rgba(10, 17, 40, 0.6);
-  border-bottom: 1px solid var(--glass-border);
-  padding: 0.85rem 1.75rem;
+  padding: 0.75rem 1.6rem;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
   gap: 2.5rem;
 }
 
@@ -330,93 +341,88 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
 
 .m-val {
   font-size: 1.25rem;
-  font-weight: 800;
-  color: #ffffff;
+  font-weight: 900;
+  color: var(--neo-ink);
+  font-family: var(--font-mono);
+}
+
+.stat-icon-val {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .m-lbl {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--neo-ink-muted);
 }
 
 .text-shiny {
-  color: #facc15;
+  color: #b45309;
 }
 
 .text-legendary {
-  color: #c084fc;
+  color: #6b21a8;
 }
 
 /* Modal Tabs */
 .modal-tabs {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.75rem 1.75rem;
-  border-bottom: 1px solid var(--glass-border);
+  gap: 0.4rem;
+  padding: 0.65rem 1.6rem;
+  border-bottom: var(--neo-border);
+  background: var(--neo-bg);
   overflow-x: auto;
 }
 
 .m-tab {
   background: transparent;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
+  border: 1.5px solid transparent;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-xs);
+  color: var(--neo-ink-light);
   font-family: var(--font-family);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .m-tab:hover {
-  color: var(--text-main);
+  color: var(--neo-ink);
 }
 
 .m-tab.active {
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: var(--neo-surface);
+  color: var(--neo-ink);
+  border: var(--neo-border-thin);
+  box-shadow: 1.5px 1.5px 0px var(--neo-ink);
 }
 
-/* Tab Content */
+/* Tab Pane */
 .tab-pane {
-  padding: 1.75rem;
+  padding: 1.6rem;
   overflow-y: auto;
-  max-height: 550px;
+  max-height: 520px;
 }
 
 /* Party Grid */
 .party-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.25rem;
+  gap: 1.15rem;
 }
 
 .party-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
   padding: 1rem;
   display: flex;
   flex-direction: column;
-  transition: var(--transition);
-}
-
-.party-card:hover {
-  transform: translateY(-3px);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.party-card.shiny-border {
-  border-color: rgba(250, 204, 21, 0.5);
-  box-shadow: 0 0 12px rgba(250, 204, 21, 0.15);
-}
-
-.party-card.legendary-border {
-  border-color: rgba(192, 132, 252, 0.5);
-  box-shadow: 0 0 12px rgba(192, 132, 252, 0.15);
 }
 
 .poke-card-top {
@@ -427,98 +433,94 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
 
 .poke-lvl {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--accent-cyan);
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: var(--neo-ink);
 }
 
 .poke-badges {
   display: flex;
-  gap: 0.3rem;
-}
-
-.mini-tag {
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.1rem 0.35rem;
-  border-radius: var(--radius-sm);
-}
-
-.mini-tag.shiny {
-  background: rgba(250, 204, 21, 0.2);
-  color: #fde047;
-}
-
-.mini-tag.legendary {
-  background: rgba(192, 132, 252, 0.2);
-  color: #d8b4fe;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .poke-sprite-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 90px;
+  height: 85px;
   margin: 0.5rem 0;
+  border-radius: var(--radius-sm);
 }
 
 .poke-sprite {
-  max-width: 80px;
-  max-height: 80px;
+  max-width: 65px;
+  max-height: 65px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 
 .poke-name {
   font-size: 1.05rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-weight: 800;
+  color: var(--neo-ink);
 }
 
 .poke-types {
   display: flex;
-  gap: 0.35rem;
+  gap: 0.3rem;
   margin: 0.4rem 0;
 }
 
 .type-pill {
   font-size: 0.65rem;
-  font-weight: 700;
+  font-weight: 800;
   color: #ffffff;
   padding: 0.15rem 0.45rem;
-  border-radius: var(--radius-sm);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--neo-ink);
+  box-shadow: 1px 1px 0px var(--neo-ink);
 }
 
 .poke-stats-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 0.72rem;
+  color: var(--neo-ink-light);
   margin-top: 0.2rem;
+  font-weight: 600;
 }
 
-.poke-attr strong {
-  color: var(--text-main);
+.poke-stats-row strong {
+  color: var(--neo-ink);
 }
 
 /* Trophy Grid */
 .trophy-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 1.15rem;
 }
 
 .trophy-card {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  padding: 1.25rem;
+  gap: 1.15rem;
+  padding: 1.15rem;
+}
+
+.trophy-sprite-box {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
 }
 
 .trophy-sprite {
-  width: 75px;
-  height: 75px;
+  max-width: 58px;
+  max-height: 58px;
   object-fit: contain;
 }
 
@@ -534,72 +536,83 @@ const activeModalTab = ref('party') // 'party', 'legendaries', 'shinies', 'poked
 }
 
 .trophy-name {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--neo-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .trophy-location {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 0.78rem;
+  color: var(--neo-ink-light);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
-.trophy-location strong {
-  color: var(--accent-cyan);
+.location-icon {
+  color: #ef4444;
+  flex-shrink: 0;
 }
 
 /* Regional Breakdown Grid */
 .regional-breakdown-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1.15rem;
 }
 
 .region-progress-box {
-  padding: 1.25rem;
+  padding: 1.15rem;
 }
 
 .box-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .box-reg-name {
-  font-weight: 700;
-  color: #ffffff;
-  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--neo-ink);
+  font-size: 0.92rem;
 }
 
 .box-reg-count {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-family: var(--font-mono);
-  color: var(--text-muted);
+  color: var(--neo-ink-light);
+  font-weight: 700;
 }
 
-.box-progress-bar {
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
+.box-progress-track {
+  height: 9px;
   border-radius: var(--radius-full);
   overflow: hidden;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.35rem;
+  border: 1px solid var(--neo-ink);
 }
 
 .box-fill {
   height: 100%;
   border-radius: var(--radius-full);
-  transition: width 0.6s ease;
+  border-right: 1px solid var(--neo-ink);
 }
 
 .box-pct {
-  font-size: 0.75rem;
-  color: var(--text-dim);
+  font-size: 0.72rem;
+  color: var(--neo-ink-muted);
+  font-weight: 700;
 }
 
 .empty-state {
   text-align: center;
-  color: var(--text-dim);
-  padding: 3rem 0;
+  color: var(--neo-ink-muted);
+  font-weight: 700;
+  padding: 2.5rem 0;
 }
 </style>

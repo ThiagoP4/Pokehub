@@ -1,13 +1,10 @@
-// Dados simulados realistas de jogadores do Cobblemon
+// Dados simulados do servidor privado entre amigos
 export const serverInfo = {
-  name: "Cobblemon Brasil Odyssey",
-  motd: "O maior mundo aberto de Cobblemon do Brasil! Explore, batalhe e capture.",
-  ip: "jogar.cobblemonbrasil.com",
-  version: "Minecraft 1.20.1 • Cobblemon 1.5.2",
-  onlinePlayers: 18,
-  maxPlayers: 50,
-  uptime: "99.8%",
-  totalRegistered: 142
+  name: "PokeHub",
+  subtitle: "Acompanhe a nossa jornada no servidor — veja quem está liderando a Pokédex, os Shinies que já brilharam e os Lendários capturados pela galera.",
+  version: "Minecraft 1.20.1 • Cobblemon",
+  onlinePlayers: 3,
+  totalPlayers: 5
 }
 
 export const regions = [
@@ -25,174 +22,202 @@ export const regions = [
 export const playersData = [
   {
     uuid: "a8e9-41fa-8812-9cbb",
-    username: "AshKetchum_BR",
-    avatar: "https://mc-heads.net/avatar/AshKetchum_BR/100",
-    rank: "Mestre Pokémon",
+    username: "Thiago",
+    avatar: "https://mc-heads.net/avatar/Thiago/100",
+    rank: "Colecionador de Kanto",
     isOnline: true,
-    playTime: "148h",
-    totalCaptured: 342,
-    shiniesCount: 14,
-    legendariesCount: 4,
+    playTime: "68h",
+    totalCaptured: 192,
+    shiniesCount: 6,
+    legendariesCount: 2,
     pokedexProgress: {
-      kanto: { seen: 151, caught: 142 },
-      johto: { seen: 98, caught: 85 },
-      hoenn: { seen: 120, caught: 92 },
-      sinnoh: { seen: 70, caught: 54 },
-      unova: { seen: 60, caught: 41 },
-      kalos: { seen: 45, caught: 38 },
-      alola: { seen: 50, caught: 35 },
-      galar: { seen: 40, caught: 29 },
-      paldea: { seen: 30, caught: 20 }
+      kanto: { seen: 142, caught: 118 },
+      johto: { seen: 68, caught: 42 },
+      hoenn: { seen: 55, caught: 32 },
+      sinnoh: { seen: 34, caught: 18 },
+      unova: { seen: 28, caught: 14 },
+      kalos: { seen: 20, caught: 10 },
+      alola: { seen: 16, caught: 8 },
+      galar: { seen: 14, caught: 6 },
+      paldea: { seen: 16, caught: 9 }
     },
     party: [
-      { id: 25, name: "Pikachu", level: 88, shiny: false, gender: "M", nature: "Jolly", ability: "Static", item: "Light Ball", types: ["Electric"], ivPercent: 92 },
-      { id: 6, name: "Charizard", level: 92, shiny: true, gender: "M", nature: "Timid", ability: "Solar Power", item: "Choice Specs", types: ["Fire", "Flying"], ivPercent: 97 },
-      { id: 131, name: "Lapras", level: 75, shiny: false, gender: "F", nature: "Modest", ability: "Water Absorb", item: "Leftovers", types: ["Water", "Ice"], ivPercent: 88 },
-      { id: 143, name: "Snorlax", level: 80, shiny: false, gender: "M", nature: "Careful", ability: "Thick Fat", item: "Chesto Berry", types: ["Normal"], ivPercent: 85 },
-      { id: 150, name: "Mewtwo", level: 95, shiny: false, isLegendary: true, gender: "N", nature: "Timid", ability: "Pressure", item: "Life Orb", types: ["Psychic"], ivPercent: 95 },
-      { id: 448, name: "Lucario", level: 86, shiny: true, gender: "M", nature: "Adamant", ability: "Justified", item: "Focus Sash", types: ["Fighting", "Steel"], ivPercent: 94 }
+      { id: 6, name: "Charizard", level: 78, shiny: true, gender: "M", nature: "Timid", ability: "Solar Power", item: "Charcoal", types: ["Fire", "Flying"], ivPercent: 92 },
+      { id: 131, name: "Lapras", level: 71, shiny: false, gender: "F", nature: "Modest", ability: "Water Absorb", item: "Leftovers", types: ["Water", "Ice"], ivPercent: 86 },
+      { id: 448, name: "Lucario", level: 74, shiny: false, gender: "M", nature: "Adamant", ability: "Inner Focus", item: "Expert Belt", types: ["Fighting", "Steel"], ivPercent: 91 },
+      { id: 94, name: "Gengar", level: 69, shiny: true, gender: "M", nature: "Timid", ability: "Cursed Body", item: "Spell Tag", types: ["Ghost", "Poison"], ivPercent: 84 },
+      { id: 143, name: "Snorlax", level: 67, shiny: false, gender: "M", nature: "Careful", ability: "Thick Fat", item: "Sitrus Berry", types: ["Normal"], ivPercent: 80 },
+      { id: 150, name: "Mewtwo", level: 85, shiny: false, isLegendary: true, gender: "N", nature: "Timid", ability: "Pressure", item: "Twisted Spoon", types: ["Psychic"], ivPercent: 95 }
     ],
     legendaries: [
-      { id: 150, name: "Mewtwo", level: 95, shiny: false, caughtAt: "Cerulean Cave (Bioma Deep Dark)" },
-      { id: 144, name: "Articuno", level: 70, shiny: false, caughtAt: "Picos Congelados" },
-      { id: 249, name: "Lugia", level: 80, shiny: false, caughtAt: "Monumento Oceânico Profundo" },
-      { id: 384, name: "Rayquaza", level: 85, shiny: true, caughtAt: "Pilar Celestial (Camada Y=300)" }
+      { id: 150, name: "Mewtwo", level: 85, shiny: false, caughtAt: "Deep Dark (Y=-42)" },
+      { id: 144, name: "Articuno", level: 70, shiny: false, caughtAt: "Picos Congelados" }
     ],
     shiniesHighlights: [
-      { id: 6, name: "Charizard", level: 92 },
-      { id: 448, name: "Lucario", level: 86 },
-      { id: 130, name: "Gyarados", level: 74 },
-      { id: 94, name: "Gengar", level: 82 },
-      { id: 384, name: "Rayquaza", level: 85, isLegendary: true }
+      { id: 6, name: "Charizard", level: 78 },
+      { id: 94, name: "Gengar", level: 69 },
+      { id: 130, name: "Gyarados", level: 58 },
+      { id: 133, name: "Eevee", level: 30 },
+      { id: 25, name: "Pikachu", level: 45 }
     ]
   },
   {
     uuid: "b7f1-32ca-9911-4abb",
-    username: "Red_Champion",
-    avatar: "https://mc-heads.net/avatar/Red/100",
-    rank: "Lenda",
+    username: "Alisson",
+    avatar: "https://mc-heads.net/avatar/Alisson/100",
+    rank: "Mestre dos Shinies",
     isOnline: true,
-    playTime: "210h",
-    totalCaptured: 420,
-    shiniesCount: 22,
-    legendariesCount: 6,
+    playTime: "75h",
+    totalCaptured: 174,
+    shiniesCount: 9,
+    legendariesCount: 1,
     pokedexProgress: {
-      kanto: { seen: 151, caught: 151 },
-      johto: { seen: 100, caught: 96 },
-      hoenn: { seen: 135, caught: 110 },
-      sinnoh: { seen: 95, caught: 80 },
-      unova: { seen: 80, caught: 65 },
-      kalos: { seen: 50, caught: 44 },
-      alola: { seen: 55, caught: 40 },
-      galar: { seen: 48, caught: 35 },
-      paldea: { seen: 38, caught: 25 }
+      kanto: { seen: 125, caught: 98 },
+      johto: { seen: 80, caught: 58 },
+      hoenn: { seen: 84, caught: 65 },
+      sinnoh: { seen: 48, caught: 31 },
+      unova: { seen: 32, caught: 17 },
+      kalos: { seen: 24, caught: 14 },
+      alola: { seen: 21, caught: 11 },
+      galar: { seen: 18, caught: 9 },
+      paldea: { seen: 22, caught: 13 }
     },
     party: [
-      { id: 3, name: "Venusaur", level: 90, shiny: false, gender: "M", nature: "Bold", ability: "Chlorophyll", types: ["Grass", "Poison"], ivPercent: 91 },
-      { id: 6, name: "Charizard", level: 94, shiny: false, gender: "M", nature: "Adamant", ability: "Blaze", types: ["Fire", "Flying"], ivPercent: 93 },
-      { id: 9, name: "Blastoise", level: 90, shiny: false, gender: "M", nature: "Modest", ability: "Torrent", types: ["Water"], ivPercent: 89 },
-      { id: 25, name: "Pikachu", level: 95, shiny: true, gender: "M", nature: "Hasty", ability: "Static", types: ["Electric"], ivPercent: 98 },
-      { id: 131, name: "Lapras", level: 88, shiny: false, gender: "F", nature: "Quiet", ability: "Water Absorb", types: ["Water", "Ice"], ivPercent: 86 },
-      { id: 143, name: "Snorlax", level: 91, shiny: false, gender: "M", nature: "Impish", ability: "Immunity", types: ["Normal"], ivPercent: 90 }
+      { id: 384, name: "Rayquaza", level: 85, shiny: true, isLegendary: true, gender: "N", nature: "Jolly", ability: "Air Lock", types: ["Dragon", "Flying"], ivPercent: 96 },
+      { id: 257, name: "Blaziken", level: 72, shiny: false, gender: "M", nature: "Adamant", ability: "Speed Boost", types: ["Fire", "Fighting"], ivPercent: 88 },
+      { id: 282, name: "Gardevoir", level: 70, shiny: true, gender: "F", nature: "Modest", ability: "Trace", types: ["Psychic", "Fairy"], ivPercent: 87 },
+      { id: 658, name: "Greninja", level: 75, shiny: true, gender: "M", nature: "Timid", ability: "Protean", types: ["Water", "Dark"], ivPercent: 92 },
+      { id: 248, name: "Tyranitar", level: 71, shiny: false, gender: "M", nature: "Careful", ability: "Sand Stream", types: ["Rock", "Dark"], ivPercent: 89 },
+      { id: 462, name: "Magnezone", level: 66, shiny: false, gender: "N", nature: "Modest", ability: "Magnet Pull", types: ["Electric", "Steel"], ivPercent: 83 }
     ],
     legendaries: [
-      { id: 144, name: "Articuno", level: 75, shiny: false, caughtAt: "Geleira dos Ventos" },
-      { id: 145, name: "Zapdos", level: 78, shiny: false, caughtAt: "Torre de Energia Elétrica" },
-      { id: 146, name: "Moltres", level: 76, shiny: false, caughtAt: "Vulcão do Nether" },
-      { id: 150, name: "Mewtwo", level: 100, shiny: true, caughtAt: "Laboratório Abandonado" },
-      { id: 250, name: "Ho-Oh", level: 82, shiny: false, caughtAt: "Torre do Sino" },
-      { id: 487, name: "Giratina", level: 88, shiny: false, caughtAt: "Mundo Distorcido do The End" }
+      { id: 384, name: "Rayquaza", level: 85, shiny: true, caughtAt: "Picos Elevados (Camada Y=260)" }
     ],
     shiniesHighlights: [
-      { id: 25, name: "Pikachu", level: 95 },
-      { id: 150, name: "Mewtwo", level: 100, isLegendary: true },
-      { id: 282, name: "Gardevoir", level: 78 },
-      { id: 658, name: "Greninja", level: 85 }
+      { id: 384, name: "Rayquaza", level: 85, isLegendary: true },
+      { id: 658, name: "Greninja", level: 75 },
+      { id: 282, name: "Gardevoir", level: 70 },
+      { id: 197, name: "Umbreon", level: 56 }
     ]
   },
   {
     uuid: "c3d4-88aa-1221-7ffe",
-    username: "Cynthia_Shinnoh",
-    avatar: "https://mc-heads.net/avatar/Cynthia/100",
-    rank: "Campeã Regional",
-    isOnline: false,
-    playTime: "115h",
-    totalCaptured: 290,
-    shiniesCount: 9,
+    username: "Iorran",
+    avatar: "https://mc-heads.net/avatar/Iorran/100",
+    rank: "Explorador Lendário",
+    isOnline: true,
+    playTime: "56h",
+    totalCaptured: 158,
+    shiniesCount: 4,
     legendariesCount: 3,
     pokedexProgress: {
-      kanto: { seen: 120, caught: 98 },
-      johto: { seen: 80, caught: 62 },
-      hoenn: { seen: 90, caught: 71 },
-      sinnoh: { seen: 107, caught: 105 },
-      unova: { seen: 50, caught: 38 },
-      kalos: { seen: 40, caught: 29 },
-      alola: { seen: 35, caught: 22 },
-      galar: { seen: 30, caught: 18 },
-      paldea: { seen: 25, caught: 14 }
+      kanto: { seen: 112, caught: 85 },
+      johto: { seen: 68, caught: 48 },
+      hoenn: { seen: 62, caught: 44 },
+      sinnoh: { seen: 88, caught: 70 },
+      unova: { seen: 44, caught: 26 },
+      kalos: { seen: 24, caught: 13 },
+      alola: { seen: 20, caught: 10 },
+      galar: { seen: 16, caught: 8 },
+      paldea: { seen: 15, caught: 7 }
     },
     party: [
-      { id: 445, name: "Garchomp", level: 96, shiny: false, gender: "F", nature: "Jolly", ability: "Rough Skin", types: ["Dragon", "Ground"], ivPercent: 99 },
-      { id: 448, name: "Lucario", level: 88, shiny: false, gender: "M", nature: "Naive", ability: "Inner Focus", types: ["Fighting", "Steel"], ivPercent: 92 },
-      { id: 468, name: "Togekiss", level: 85, shiny: true, gender: "F", nature: "Timid", ability: "Serene Grace", types: ["Fairy", "Flying"], ivPercent: 95 },
-      { id: 442, name: "Spiritomb", level: 84, shiny: false, gender: "F", nature: "Infiltrator", ability: "Pressure", types: ["Ghost", "Dark"], ivPercent: 90 },
-      { id: 350, name: "Milotic", level: 86, shiny: false, gender: "F", nature: "Bold", ability: "Marvel Scale", types: ["Water"], ivPercent: 94 },
-      { id: 407, name: "Roserade", level: 82, shiny: false, gender: "F", nature: "Timid", ability: "Natural Cure", types: ["Grass", "Poison"], ivPercent: 88 }
+      { id: 445, name: "Garchomp", level: 79, shiny: false, gender: "F", nature: "Jolly", ability: "Rough Skin", types: ["Dragon", "Ground"], ivPercent: 95 },
+      { id: 392, name: "Infernape", level: 74, shiny: false, gender: "M", nature: "Naive", ability: "Blaze", types: ["Fire", "Fighting"], ivPercent: 88 },
+      { id: 468, name: "Togekiss", level: 70, shiny: true, gender: "F", nature: "Timid", ability: "Serene Grace", types: ["Fairy", "Flying"], ivPercent: 90 },
+      { id: 350, name: "Milotic", level: 72, shiny: false, gender: "F", nature: "Bold", ability: "Marvel Scale", types: ["Water"], ivPercent: 91 },
+      { id: 405, name: "Luxray", level: 68, shiny: true, gender: "M", nature: "Adamant", ability: "Intimidate", types: ["Electric"], ivPercent: 82 },
+      { id: 483, name: "Dialga", level: 80, shiny: false, isLegendary: true, gender: "N", nature: "Modest", ability: "Pressure", types: ["Steel", "Dragon"], ivPercent: 93 }
     ],
     legendaries: [
-      { id: 483, name: "Dialga", level: 90, shiny: false, caughtAt: "Pilar da Lança" },
-      { id: 484, name: "Palkia", level: 90, shiny: false, caughtAt: "Fenda Espacial" },
-      { id: 493, name: "Arceus", level: 100, shiny: false, caughtAt: "Templo Celestial Ancestral" }
+      { id: 483, name: "Dialga", level: 80, shiny: false, caughtAt: "Pico de Gelo Ancestral" },
+      { id: 245, name: "Suicune", level: 70, shiny: false, caughtAt: "Lago da Taiga" },
+      { id: 145, name: "Zapdos", level: 72, shiny: false, caughtAt: "Savana Tempestuosa" }
     ],
     shiniesHighlights: [
-      { id: 468, name: "Togekiss", level: 85 },
-      { id: 133, name: "Eevee", level: 45 },
-      { id: 257, name: "Blaziken", level: 80 }
+      { id: 468, name: "Togekiss", level: 70 },
+      { id: 405, name: "Luxray", level: 68 },
+      { id: 447, name: "Riolu", level: 25 }
+    ]
+  },
+  {
+    uuid: "e4a5-99cc-3321-44dd",
+    username: "Bello",
+    avatar: "https://mc-heads.net/avatar/Bello/100",
+    rank: "Tático de Batalha",
+    isOnline: false,
+    playTime: "48h",
+    totalCaptured: 135,
+    shiniesCount: 3,
+    legendariesCount: 1,
+    pokedexProgress: {
+      kanto: { seen: 96, caught: 72 },
+      johto: { seen: 62, caught: 41 },
+      hoenn: { seen: 48, caught: 30 },
+      sinnoh: { seen: 38, caught: 22 },
+      unova: { seen: 25, caught: 13 },
+      kalos: { seen: 18, caught: 9 },
+      alola: { seen: 14, caught: 6 },
+      galar: { seen: 12, caught: 5 },
+      paldea: { seen: 11, caught: 4 }
+    },
+    party: [
+      { id: 212, name: "Scizor", level: 73, shiny: true, gender: "M", nature: "Adamant", ability: "Technician", types: ["Bug", "Steel"], ivPercent: 92 },
+      { id: 130, name: "Gyarados", level: 70, shiny: false, gender: "M", nature: "Jolly", ability: "Intimidate", types: ["Water", "Flying"], ivPercent: 88 },
+      { id: 472, name: "Gliscor", level: 68, shiny: false, gender: "M", nature: "Impish", ability: "Poison Heal", types: ["Ground", "Flying"], ivPercent: 87 },
+      { id: 461, name: "Weavile", level: 69, shiny: false, gender: "F", nature: "Jolly", ability: "Pressure", types: ["Dark", "Ice"], ivPercent: 89 },
+      { id: 149, name: "Dragonite", level: 75, shiny: false, gender: "M", nature: "Adamant", ability: "Multiscale", types: ["Dragon", "Flying"], ivPercent: 94 },
+      { id: 244, name: "Entei", level: 72, shiny: false, isLegendary: true, gender: "N", nature: "Adamant", ability: "Pressure", types: ["Fire"], ivPercent: 90 }
+    ],
+    legendaries: [
+      { id: 244, name: "Entei", level: 72, shiny: false, caughtAt: "Vulcão de Basalto do Nether" }
+    ],
+    shiniesHighlights: [
+      { id: 212, name: "Scizor", level: 73 },
+      { id: 149, name: "Dragonite", level: 55 }
     ]
   },
   {
     uuid: "d9e8-77bb-4332-11cc",
-    username: "Silver_Rival",
-    avatar: "https://mc-heads.net/avatar/Silver/100",
-    rank: "Treinador Veterano",
+    username: "Gregory",
+    avatar: "https://mc-heads.net/avatar/Gregory/100",
+    rank: "Treinador Estrategista",
     isOnline: false,
-    playTime: "76h",
-    totalCaptured: 198,
-    shiniesCount: 6,
-    legendariesCount: 2,
+    playTime: "39h",
+    totalCaptured: 114,
+    shiniesCount: 2,
+    legendariesCount: 1,
     pokedexProgress: {
-      kanto: { seen: 110, caught: 80 },
-      johto: { seen: 100, caught: 88 },
-      hoenn: { seen: 70, caught: 45 },
-      sinnoh: { seen: 40, caught: 25 },
-      unova: { seen: 30, caught: 18 },
-      kalos: { seen: 25, caught: 15 },
-      alola: { seen: 20, caught: 10 },
-      galar: { seen: 18, caught: 9 },
-      paldea: { seen: 15, caught: 6 }
+      kanto: { seen: 92, caught: 62 },
+      johto: { seen: 52, caught: 33 },
+      hoenn: { seen: 38, caught: 20 },
+      sinnoh: { seen: 28, caught: 14 },
+      unova: { seen: 20, caught: 9 },
+      kalos: { seen: 14, caught: 6 },
+      alola: { seen: 11, caught: 4 },
+      galar: { seen: 9, caught: 3 },
+      paldea: { seen: 8, caught: 2 }
     },
     party: [
-      { id: 160, name: "Feraligatr", level: 82, shiny: false, gender: "M", nature: "Adamant", ability: "Sheer Force", types: ["Water"], ivPercent: 91 },
-      { id: 215, name: "Sneasel", level: 74, shiny: true, gender: "M", nature: "Jolly", ability: "Inner Focus", types: ["Dark", "Ice"], ivPercent: 88 },
-      { id: 169, name: "Crobat", level: 78, shiny: false, gender: "M", nature: "Jolly", ability: "Infiltrator", types: ["Poison", "Flying"], ivPercent: 86 },
-      { id: 94, name: "Gengar", level: 80, shiny: false, gender: "M", nature: "Timid", ability: "Cursed Body", types: ["Ghost", "Poison"], ivPercent: 89 },
-      { id: 82, name: "Magneton", level: 70, shiny: false, gender: "N", nature: "Modest", ability: "Magnet Pull", types: ["Electric", "Steel"], ivPercent: 85 },
-      { id: 248, name: "Tyranitar", level: 84, shiny: false, gender: "M", nature: "Careful", ability: "Sand Stream", types: ["Rock", "Dark"], ivPercent: 93 }
+      { id: 160, name: "Feraligatr", level: 68, shiny: false, gender: "M", nature: "Adamant", ability: "Sheer Force", types: ["Water"], ivPercent: 86 },
+      { id: 169, name: "Crobat", level: 65, shiny: true, gender: "M", nature: "Jolly", ability: "Infiltrator", types: ["Poison", "Flying"], ivPercent: 82 },
+      { id: 181, name: "Ampharos", level: 66, shiny: false, gender: "F", nature: "Modest", ability: "Static", types: ["Electric"], ivPercent: 87 },
+      { id: 214, name: "Heracross", level: 64, shiny: false, gender: "M", nature: "Adamant", ability: "Guts", types: ["Bug", "Fighting"], ivPercent: 89 },
+      { id: 196, name: "Espeon", level: 65, shiny: false, gender: "F", nature: "Timid", ability: "Magic Bounce", types: ["Psychic"], ivPercent: 85 },
+      { id: 243, name: "Raikou", level: 70, shiny: false, isLegendary: true, gender: "N", nature: "Timid", ability: "Pressure", types: ["Electric"], ivPercent: 91 }
     ],
     legendaries: [
-      { id: 243, name: "Raikou", level: 70, shiny: false, caughtAt: "Planícies Tempestuosas" },
-      { id: 244, name: "Entei", level: 72, shiny: false, caughtAt: "Montanha de Lava" }
+      { id: 243, name: "Raikou", level: 70, shiny: false, caughtAt: "Planícies Eletrizadas" }
     ],
     shiniesHighlights: [
-      { id: 215, name: "Sneasel", level: 74 },
-      { id: 179, name: "Mareep", level: 32 }
+      { id: 169, name: "Crobat", level: 65 },
+      { id: 179, name: "Mareep", level: 28 }
     ]
   }
 ]
 
 // Função auxiliar para pegar sprite animado do Pokémon
 export function getPokemonSprite(id, shiny = false) {
-  // Showdown animated sprites
   const baseUrl = shiny 
     ? 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/shiny'
     : 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown';

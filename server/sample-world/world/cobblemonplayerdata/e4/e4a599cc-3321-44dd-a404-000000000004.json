@@ -1,0 +1,37 @@
+{
+  "uuid": "e4a599cc-3321-44dd-a404-000000000004",
+  "rank": "Tático de Batalha",
+  "isOnline": false,
+  "advancementData": {
+    "totalCaptureCount": 135,
+    "totalShinyCaptureCount": 3,
+    "totalLegendaryCaptureCount": 1,
+    "pokedexProgress": {
+      "kanto": { "seen": 96, "caught": 72 },
+      "johto": { "seen": 62, "caught": 41 },
+      "hoenn": { "seen": 48, "caught": 30 },
+      "sinnoh": { "seen": 38, "caught": 22 },
+      "unova": { "seen": 25, "caught": 13 },
+      "kalos": { "seen": 18, "caught": 9 },
+      "alola": { "seen": 14, "caught": 6 },
+      "galar": { "seen": 12, "caught": 5 },
+      "paldea": { "seen": 11, "caught": 4 }
+    }
+  },
+  "party": [
+    { "species": "cobblemon:scizor", "level": 73, "shiny": true, "gender": "M", "nature": "Adamant", "ability": "Technician", "ivPercent": 92 },
+    { "species": "cobblemon:gyarados", "level": 70, "shiny": false, "gender": "M", "nature": "Jolly", "ability": "Intimidate", "ivPercent": 88 },
+    { "species": "cobblemon:gliscor", "level": 68, "shiny": false, "gender": "M", "nature": "Impish", "ability": "Poison Heal", "ivPercent": 87 },
+    { "species": "cobblemon:weavile", "level": 69, "shiny": false, "gender": "F", "nature": "Jolly", "ability": "Pressure", "ivPercent": 89 },
+    { "species": "cobblemon:dragonite", "level": 75, "shiny": false, "gender": "M", "nature": "Adamant", "ability": "Multiscale", "ivPercent": 94 },
+    { "species": "cobblemon:entei", "level": 72, "shiny": false, "gender": "N", "nature": "Adamant", "ability": "Pressure", "ivPercent": 90 }
+  ],
+  "legendaries": [
+    { "species": "cobblemon:entei", "level": 72, "shiny": false, "caughtAt": "Vulcão de Basalto do Nether" }
+  ],
+  "shiniesHighlights": [
+    { "species": "cobblemon:scizor", "level": 73 },
+    { "species": "cobblemon:dragonite", "level": 55 }
+  ]
+}
+

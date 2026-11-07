@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { regions, getPokemonSprite, getPokemonStaticSprite, typeColors } from '../data/mockData'
-import { BookOpen, Sparkles, Filter, CheckCircle2 } from 'lucide-vue-next'
+import { regions, getPokemonSprite, getPokemonStaticSprite } from '../data/mockData'
+import pokemonNames from '../data/pokemonNames.json'
+import { BookOpen, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 
 const props = defineProps({
   players: {
@@ -16,43 +17,75 @@ const props = defineProps({
 
 const selectedRegionId = ref('kanto')
 const filterMode = ref('all') // 'all', 'caught', 'missing'
+const selectedPlayerUuid = ref(props.players[0]?.uuid || '')
+const currentPage = ref(1)
+const PAGE_SIZE = 48
+
+const currentPlayer = computed(() => {
+  if (props.selectedPlayer) return props.selectedPlayer
+  return props.players.find(p => p.uuid === selectedPlayerUuid.value) || props.players[0]
+})
 
 const activeRegion = computed(() => {
   return regions.find(r => r.id === selectedRegionId.value) || regions[0]
 })
 
-// Lista de Pokémons da região ativa
-const regionPokemonList = computed(() => {
+// Conjunto de Pokémon capturados pelo jogador ativo
+const playerCaughtSet = computed(() => {
+  const set = new Set()
+  const player = currentPlayer.value
+  if (!player) return set
+
+  if (Array.isArray(player.caughtIds)) {
+    player.caughtIds.forEach(id => set.add(id))
+  }
+  if (Array.isArray(player.party)) {
+    player.party.forEach(p => set.add(p.id))
+  }
+  if (Array.isArray(player.legendaries)) {
+    player.legendaries.forEach(l => set.add(l.id))
+  }
+  if (Array.isArray(player.shiniesHighlights)) {
+    player.shiniesHighlights.forEach(s => set.add(s.id))
+  }
+  return set
+})
+
+const playerShinySet = computed(() => {
+  const set = new Set()
+  const player = currentPlayer.value
+  if (!player) return set
+
+  if (Array.isArray(player.shinyIds)) {
+    player.shinyIds.forEach(id => set.add(id))
+  }
+  if (Array.isArray(player.party)) {
+    player.party.filter(p => p.shiny).forEach(p => set.add(p.id))
+  }
+  if (Array.isArray(player.shiniesHighlights)) {
+    player.shiniesHighlights.forEach(s => set.add(s.id))
+  }
+  return set
+})
+
+// Todos os Pokémon da região ativa (100% de Kanto a Paldea)
+const allRegionPokemonList = computed(() => {
   const [start, end] = activeRegion.value.range
   const list = []
+  const caughtSet = playerCaughtSet.value
+  const shinySet = playerShinySet.value
+  const hasRealCaughtList = Array.isArray(currentPlayer.value?.caughtIds) && currentPlayer.value.caughtIds.length > 0
 
-  // Pokémons capturados pelo jogador selecionado (ou AshKetchum como padrão)
-  const player = props.selectedPlayer || props.players[0]
-  const caughtSet = new Set(player.party.map(p => p.id))
-  if (player.legendaries) {
-    player.legendaries.forEach(l => caughtSet.add(l.id))
-  }
-  if (player.shiniesHighlights) {
-    player.shiniesHighlights.forEach(s => caughtSet.add(s.id))
-  }
+  for (let id = start; id <= end; id++) {
+    // Se vier a lista real do servidor Cobblemon, usa 100% os dados reais; senão usa fallback visual
+    const isCaught = hasRealCaughtList
+      ? caughtSet.has(id)
+      : caughtSet.has(id) || (id % 2 === 0 && id <= start + 40)
+    const isShiny = shinySet.has(id)
 
-  // Exemplos conhecidos de nomes para exibição rica
-  const sampleNames = {
-    1: "Bulbasaur", 2: "Ivysaur", 3: "Venusaur", 4: "Charmander", 5: "Charmeleon", 6: "Charizard",
-    7: "Squirtle", 8: "Wartortle", 9: "Blastoise", 25: "Pikachu", 130: "Gyarados", 131: "Lapras",
-    143: "Snorlax", 144: "Articuno", 145: "Zapdos", 146: "Moltres", 149: "Dragonite", 150: "Mewtwo", 151: "Mew",
-    152: "Chikorita", 155: "Cyndaquil", 158: "Totodile", 243: "Raikou", 244: "Entei", 245: "Suicune", 249: "Lugia", 250: "Ho-Oh",
-    252: "Treecko", 255: "Torchic", 258: "Mudkip", 382: "Kyogre", 383: "Groudon", 384: "Rayquaza",
-    387: "Turtwig", 390: "Chimchar", 393: "Piplup", 445: "Garchomp", 448: "Lucario", 483: "Dialga", 484: "Palkia", 487: "Giratina", 493: "Arceus"
-  }
-
-  // Mostramos os primeiros 24 pokemons da região para renderização ágil e fluida
-  const limit = Math.min(start + 23, end)
-  for (let id = start; id <= limit; id++) {
-    // Determina se foi capturado
-    const isCaught = caughtSet.has(id) || (id % 2 === 0 && id <= start + 12)
-    const isShiny = (id === 6 || id === 25 || id === 384 || id === 448) && isCaught
-    const name = sampleNames[id] || `Pokémon #${String(id).padStart(3, '0')}`
+    const rawName = pokemonNames[id - 1] || `Pokémon #${String(id).padStart(3, '0')}`
+    // Deixa nomes compostos mais limpos (ex: Tapu-koko -> Tapu Koko, Ho-oh -> Ho-Oh)
+    const name = rawName.replace(/-/g, ' ')
 
     if (filterMode.value === 'caught' && !isCaught) continue
     if (filterMode.value === 'missing' && isCaught) continue
@@ -70,116 +103,186 @@ const regionPokemonList = computed(() => {
 
   return list
 })
+
+// Paginação elegante
+const totalPages = computed(() => {
+  return Math.ceil(allRegionPokemonList.value.length / PAGE_SIZE) || 1
+})
+
+const paginatedPokemonList = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE
+  return allRegionPokemonList.value.slice(start, start + PAGE_SIZE)
+})
+
+function changeRegion(regionId) {
+  selectedRegionId.value = regionId
+  currentPage.value = 1
+}
+
+function changeFilter(mode) {
+  filterMode.value = mode
+  currentPage.value = 1
+}
 </script>
 
 <template>
   <section class="pokedex-section" id="pokedex">
-    <div class="container">
-      <div class="section-header">
-        <div>
-          <div class="pokedex-title-badge">
-            <BookOpen :size="16" />
-            <span>Enciclopédia Cobblemon</span>
-          </div>
-          <h2 class="section-title">Pokédex por Região</h2>
-          <p class="section-subtitle">
-            Progresso de exploração do mundo Cobblemon baseado no jogador 
-            <strong class="highlight-player">{{ (selectedPlayer || players[0]).username }}</strong>
-          </p>
+    <!-- Header com Controles Táteis -->
+    <div class="section-header">
+      <div>
+        <div class="badge badge-shiny">
+          <BookOpen :size="14" />
+          <span>Enciclopédia de Campo</span>
+        </div>
+        <h2 class="section-title">Pokédex Regional</h2>
+        <p class="section-subtitle">
+          Registros oficiais de <strong>{{ currentPlayer.username }}</strong>
+        </p>
+      </div>
+
+      <div class="pokedex-controls">
+        <!-- Seletor de Amigo (Pills Táteis) -->
+        <div class="friend-pills neo-card-inset">
+          <button
+            v-for="p in players"
+            :key="p.uuid"
+            :class="['friend-pill-btn', { active: currentPlayer.uuid === p.uuid }]"
+            @click="selectedPlayerUuid = p.uuid"
+          >
+            <img :src="p.avatar" :alt="p.username" class="pill-avatar" />
+            <span>{{ p.username }}</span>
+          </button>
         </div>
 
-        <!-- Filter mode -->
-        <div class="display-filters">
+        <!-- Filtro: Todos / Capturados / Faltando -->
+        <div class="display-filters neo-card-inset">
           <button 
             :class="['display-btn', { active: filterMode === 'all' }]"
-            @click="filterMode = 'all'"
+            @click="changeFilter('all')"
           >
             Todos
           </button>
           <button 
             :class="['display-btn', { active: filterMode === 'caught' }]"
-            @click="filterMode = 'caught'"
+            @click="changeFilter('caught')"
           >
             <CheckCircle2 :size="14" />
-            Capturados
+            Pegou
           </button>
           <button 
             :class="['display-btn', { active: filterMode === 'missing' }]"
-            @click="filterMode = 'missing'"
+            @click="changeFilter('missing')"
           >
-            Faltando
+            Falta
           </button>
         </div>
       </div>
+    </div>
 
-      <!-- Region Selector Tabs -->
-      <div class="region-tabs-container">
-        <div class="region-tabs">
-          <button 
-            v-for="region in regions" 
-            :key="region.id"
-            :class="['region-tab-btn', { active: selectedRegionId === region.id }]"
-            @click="selectedRegionId = region.id"
-          >
-            <span class="region-name">{{ region.name }}</span>
-            <span class="region-gen">{{ region.gen }}</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Region Banner & Progress Summary -->
-      <div class="region-summary-card glass-panel">
-        <div class="summary-info">
-          <span class="summary-gen-tag">{{ activeRegion.gen }}</span>
-          <h3 class="summary-region-name">Região de {{ activeRegion.name }}</h3>
-          <p class="summary-desc">
-            Registros {{ activeRegion.range[0] }} até {{ activeRegion.range[1] }} • Total de {{ activeRegion.total }} espécies nativas no Cobblemon.
-          </p>
-        </div>
-
-        <div class="summary-stats">
-          <div class="stat-circle">
-            <span class="circle-val">84%</span>
-            <span class="circle-lbl">Conclusão</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pokemon Grid -->
-      <div class="pokemon-grid">
-        <div 
-          v-for="pkmn in regionPokemonList" 
-          :key="pkmn.id"
-          class="pokemon-card glass-panel"
-          :class="{ 'not-caught': !pkmn.isCaught, 'is-shiny': pkmn.isShiny }"
+    <!-- Seletor de Regiões estilo Folder Tabs do UI Kit -->
+    <div class="region-tabs-container">
+      <div class="region-tabs">
+        <button 
+          v-for="region in regions" 
+          :key="region.id"
+          :class="['region-tab-btn', { active: selectedRegionId === region.id }]"
+          @click="changeRegion(region.id)"
         >
-          <div class="card-header">
-            <span class="pkmn-number">{{ pkmn.number }}</span>
-            <span v-if="pkmn.isShiny" class="badge-mini-shiny" title="Versão Brilhante">
-              ✨ Shiny
-            </span>
-            <span v-else-if="pkmn.isCaught" class="badge-mini-caught" title="Capturado">
-              ✓ Pegou
-            </span>
-          </div>
+          <span class="region-name">{{ region.name }}</span>
+          <span class="region-gen">{{ region.gen }}</span>
+        </button>
+      </div>
+    </div>
 
-          <!-- Sprite with Fallback -->
-          <div class="sprite-box">
-            <img 
-              :src="pkmn.sprite" 
-              :alt="pkmn.name" 
-              class="pkmn-sprite"
-              :class="{ 'silhouette': !pkmn.isCaught }"
-              loading="lazy"
-              @error="$event.target.src = pkmn.fallbackSprite"
-            />
-          </div>
+    <!-- Cartão Resumo da Região Ativa -->
+    <div class="region-summary-card neo-card">
+      <div class="summary-info">
+        <span class="badge">{{ activeRegion.gen }}</span>
+        <h3 class="summary-region-name">Região de {{ activeRegion.name }}</h3>
+        <p class="summary-desc">
+          {{ currentPlayer.pokedexProgress[activeRegion.id]?.caught || 0 }} de {{ activeRegion.total }} espécies registradas por {{ currentPlayer.username }} ({{ currentPlayer.pokedexProgress[activeRegion.id]?.seen || 0 }} avistadas no mapa).
+        </p>
+      </div>
 
-          <div class="card-footer">
-            <span class="pkmn-name">{{ pkmn.name }}</span>
-            <span class="pkmn-status">{{ pkmn.isCaught ? 'Registrado' : 'Desconhecido' }}</span>
-          </div>
+      <div class="summary-stats">
+        <div class="stat-badge-neo neo-card-inset">
+          <span class="circle-val">
+            {{ Math.round(((currentPlayer.pokedexProgress[activeRegion.id]?.caught || 0) / activeRegion.total) * 100) }}%
+          </span>
+          <span class="circle-lbl">Concluído</span>
         </div>
+      </div>
+    </div>
+
+    <!-- Grid de Pokémons estilo Cartões de Colecionador Neo-Skeuo -->
+    <div class="pokemon-grid">
+      <div 
+        v-for="pkmn in paginatedPokemonList" 
+        :key="pkmn.id"
+        class="pokemon-card neo-card"
+        :class="{ 'not-caught': !pkmn.isCaught, 'is-shiny': pkmn.isShiny }"
+      >
+        <div class="card-header">
+          <span class="pkmn-number">{{ pkmn.number }}</span>
+          <span v-if="pkmn.isShiny" class="badge badge-shiny">✨ Shiny</span>
+          <span v-else-if="pkmn.isCaught" class="badge badge-online">✓ Registrado</span>
+        </div>
+
+        <!-- Sprite Container Inset -->
+        <div class="sprite-box neo-card-inset">
+          <img 
+            :src="pkmn.sprite" 
+            :alt="pkmn.name" 
+            class="pkmn-sprite"
+            :class="{ 'silhouette': !pkmn.isCaught }"
+            loading="lazy"
+            @error="$event.target.src = pkmn.fallbackSprite"
+          />
+        </div>
+
+        <div class="card-footer">
+          <span class="pkmn-name">{{ pkmn.name }}</span>
+          <span class="pkmn-status">{{ pkmn.isCaught ? 'Capturado' : 'Não encontrado' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paginação Táteis Neo-Skeuo -->
+    <div class="pagination-bar neo-card" v-if="totalPages > 1">
+      <span class="page-info">
+        Mostrando {{ (currentPage - 1) * PAGE_SIZE + 1 }} a {{ Math.min(currentPage * PAGE_SIZE, allRegionPokemonList.length) }} de {{ allRegionPokemonList.length }} espécies
+      </span>
+
+      <div class="page-controls">
+        <button 
+          class="btn btn-secondary btn-sm"
+          :disabled="currentPage === 1"
+          @click="currentPage--"
+        >
+          <ChevronLeft :size="16" />
+          <span>Anterior</span>
+        </button>
+
+        <div class="page-pills">
+          <button 
+            v-for="p in totalPages" 
+            :key="p"
+            class="page-pill"
+            :class="{ active: currentPage === p }"
+            @click="currentPage = p"
+          >
+            {{ p }}
+          </button>
+        </div>
+
+        <button 
+          class="btn btn-secondary btn-sm"
+          :disabled="currentPage === totalPages"
+          @click="currentPage++"
+        >
+          <span>Próxima</span>
+          <ChevronRight :size="16" />
+        </button>
       </div>
     </div>
   </section>
@@ -187,85 +290,110 @@ const regionPokemonList = computed(() => {
 
 <style scoped>
 .pokedex-section {
-  padding: 3rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
-.pokedex-title-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--accent-cyan);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.4rem;
-}
-
 .section-title {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #ffffff;
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: var(--neo-ink);
+  letter-spacing: -0.02em;
+  margin-top: 0.25rem;
 }
 
 .section-subtitle {
-  color: var(--text-muted);
-  font-size: 0.95rem;
+  color: var(--neo-ink-light);
+  font-size: 0.92rem;
 }
 
-.highlight-player {
-  color: #38bdf8;
+.pokedex-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
+.friend-pills,
 .display-filters {
   display: flex;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.3rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.35rem;
+}
+
+.friend-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--neo-ink-light);
+  font-family: var(--font-family);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.friend-pill-btn.active {
+  background: var(--neo-surface);
+  border: 1px solid var(--neo-ink);
+  color: var(--neo-ink);
+  box-shadow: 1.5px 1.5px 0px var(--neo-ink);
+}
+
+.pill-avatar {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  border: 1px solid var(--neo-ink);
+  image-rendering: pixelated;
 }
 
 .display-btn {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.4rem 0.85rem;
+  padding: 0.35rem 0.75rem;
   background: transparent;
-  border: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  color: var(--neo-ink-light);
   font-family: var(--font-family);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
 }
 
 .display-btn.active {
-  background: rgba(56, 189, 248, 0.2);
-  color: #38bdf8;
+  background: var(--neo-surface);
+  border: 1px solid var(--neo-ink);
+  color: var(--neo-ink);
+  box-shadow: 1.5px 1.5px 0px var(--neo-ink);
 }
 
-/* Region Tabs */
+/* Region Tabs estilo Folder Tabs */
 .region-tabs-container {
   overflow-x: auto;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
 }
 
 .region-tabs {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.5rem;
   min-width: max-content;
 }
 
@@ -273,34 +401,36 @@ const regionPokemonList = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.65rem 1.25rem;
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--glass-border);
+  padding: 0.55rem 1.15rem;
+  border-radius: var(--radius-sm);
+  background: var(--neo-surface);
+  border: var(--neo-border);
+  box-shadow: var(--elevation-1);
   cursor: pointer;
   transition: var(--transition);
 }
 
 .region-tab-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-2px);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--elevation-2);
 }
 
 .region-tab-btn.active {
-  background: linear-gradient(135deg, rgba(2, 132, 199, 0.3), rgba(56, 189, 248, 0.3));
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+  background: #fef08a; /* Amarelo de destaque */
+  box-shadow: 0px 0px 0px var(--neo-ink);
+  transform: translate(2px, 2px);
 }
 
 .region-name {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--neo-ink);
 }
 
 .region-gen {
-  font-size: 0.7rem;
-  color: var(--text-dim);
+  font-size: 0.68rem;
+  color: var(--neo-ink-light);
+  font-weight: 700;
   text-transform: uppercase;
 }
 
@@ -309,84 +439,67 @@ const regionPokemonList = computed(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 2rem;
-  margin-bottom: 2rem;
-  background: linear-gradient(135deg, rgba(14, 27, 61, 0.8), rgba(2, 132, 199, 0.15));
-}
-
-.summary-gen-tag {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--accent-cyan);
-  text-transform: uppercase;
+  padding: 1.4rem 1.8rem;
 }
 
 .summary-region-name {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #ffffff;
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: var(--neo-ink);
+  margin: 0.3rem 0;
 }
 
 .summary-desc {
-  color: var(--text-muted);
+  color: var(--neo-ink-light);
   font-size: 0.9rem;
 }
 
-.stat-circle {
+.stat-badge-neo {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 4px solid var(--accent-cyan);
-  background: rgba(10, 17, 40, 0.6);
-  box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-sm);
 }
 
 .circle-val {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #ffffff;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--neo-ink);
+  font-family: var(--font-mono);
 }
 
 .circle-lbl {
-  font-size: 0.65rem;
-  color: var(--text-dim);
+  font-size: 0.68rem;
+  color: var(--neo-ink-muted);
   text-transform: uppercase;
+  font-weight: 800;
 }
 
 /* Pokemon Grid */
 .pokemon-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
   gap: 1.25rem;
 }
 
 .pokemon-card {
-  padding: 1rem;
+  padding: 0.9rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative;
   transition: var(--transition);
 }
 
 .pokemon-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(56, 189, 248, 0.5);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-}
-
-.pokemon-card.is-shiny {
-  border-color: rgba(250, 204, 21, 0.4);
-  background: rgba(250, 204, 21, 0.04);
+  transform: translate(-2px, -2px);
+  box-shadow: var(--elevation-3);
 }
 
 .pokemon-card.not-caught {
-  opacity: 0.55;
-  filter: grayscale(0.85);
+  background: var(--neo-bg-alt);
+  opacity: 0.7;
 }
 
 .card-header {
@@ -394,53 +507,33 @@ const regionPokemonList = computed(() => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 0.5rem;
 }
 
 .pkmn-number {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-dim);
-}
-
-.badge-mini-shiny {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #fde047;
-  background: rgba(250, 204, 21, 0.2);
-  padding: 0.15rem 0.4rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid rgba(250, 204, 21, 0.3);
-}
-
-.badge-mini-caught {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #34d399;
-  background: rgba(16, 185, 129, 0.2);
-  padding: 0.15rem 0.4rem;
-  border-radius: var(--radius-sm);
+  font-weight: 800;
+  color: var(--neo-ink-light);
 }
 
 .sprite-box {
-  width: 90px;
+  width: 100%;
   height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0.5rem 0;
+  margin: 0.6rem 0;
+  border-radius: var(--radius-sm);
 }
 
 .pkmn-sprite {
-  max-width: 100%;
-  max-height: 100%;
+  max-width: 70px;
+  max-height: 70px;
   object-fit: contain;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
 }
 
 .pkmn-sprite.silhouette {
-  filter: brightness(0) invert(0.2) opacity(0.5);
+  filter: brightness(0) opacity(0.35);
 }
 
 .card-footer {
@@ -452,13 +545,72 @@ const regionPokemonList = computed(() => {
 }
 
 .pkmn-name {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: var(--neo-ink);
 }
 
 .pkmn-status {
   font-size: 0.7rem;
-  color: var(--text-dim);
+  font-weight: 700;
+  color: var(--neo-ink-muted);
+}
+
+/* Paginação Neo-Skeuo */
+.pagination-bar {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: var(--neo-surface-card);
+}
+
+.page-info {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--neo-ink-muted);
+}
+
+.page-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.page-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.page-pill {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-xs);
+  border: var(--neo-border);
+  background: var(--neo-bg);
+  color: var(--neo-ink);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 1.5px 1.5px 0px var(--neo-ink);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.page-pill:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2.5px 2.5px 0px var(--neo-ink);
+}
+
+.page-pill.active {
+  background: var(--neo-accent);
+  transform: translate(1px, 1px);
+  box-shadow: 0px 0px 0px var(--neo-ink);
 }
 </style>

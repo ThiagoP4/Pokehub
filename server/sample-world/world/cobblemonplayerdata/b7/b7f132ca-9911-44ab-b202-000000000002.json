@@ -1,0 +1,39 @@
+{
+  "uuid": "b7f132ca-9911-44ab-b202-000000000002",
+  "rank": "Mestre dos Shinies",
+  "isOnline": true,
+  "advancementData": {
+    "totalCaptureCount": 174,
+    "totalShinyCaptureCount": 9,
+    "totalLegendaryCaptureCount": 1,
+    "pokedexProgress": {
+      "kanto": { "seen": 125, "caught": 98 },
+      "johto": { "seen": 80, "caught": 58 },
+      "hoenn": { "seen": 84, "caught": 65 },
+      "sinnoh": { "seen": 48, "caught": 31 },
+      "unova": { "seen": 32, "caught": 17 },
+      "kalos": { "seen": 24, "caught": 14 },
+      "alola": { "seen": 21, "caught": 11 },
+      "galar": { "seen": 18, "caught": 9 },
+      "paldea": { "seen": 22, "caught": 13 }
+    }
+  },
+  "party": [
+    { "species": "cobblemon:rayquaza", "level": 85, "shiny": true, "gender": "N", "nature": "Jolly", "ability": "Air Lock", "ivPercent": 96 },
+    { "species": "cobblemon:blaziken", "level": 72, "shiny": false, "gender": "M", "nature": "Adamant", "ability": "Speed Boost", "ivPercent": 88 },
+    { "species": "cobblemon:gardevoir", "level": 70, "shiny": true, "gender": "F", "nature": "Modest", "ability": "Trace", "ivPercent": 87 },
+    { "species": "cobblemon:greninja", "level": 75, "shiny": true, "gender": "M", "nature": "Timid", "ability": "Protean", "ivPercent": 92 },
+    { "species": "cobblemon:tyranitar", "level": 71, "shiny": false, "gender": "M", "nature": "Careful", "ability": "Sand Stream", "ivPercent": 89 },
+    { "species": "cobblemon:magnezone", "level": 66, "shiny": false, "gender": "N", "nature": "Modest", "ability": "Magnet Pull", "ivPercent": 83 }
+  ],
+  "legendaries": [
+    { "species": "cobblemon:rayquaza", "level": 85, "shiny": true, "caughtAt": "Picos Elevados (Camada Y=260)" }
+  ],
+  "shiniesHighlights": [
+    { "species": "cobblemon:rayquaza", "level": 85 },
+    { "species": "cobblemon:greninja", "level": 75 },
+    { "species": "cobblemon:gardevoir", "level": 70 },
+    { "species": "cobblemon:umbreon", "level": 56 }
+  ]
+}
+

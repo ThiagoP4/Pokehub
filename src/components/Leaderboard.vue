@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { Trophy, Sparkles, Award, Clock, ChevronRight, Eye } from 'lucide-vue-next'
+import { Trophy, Sparkles, Award, Clock, Eye, Crown, Medal } from 'lucide-vue-next'
 
 const props = defineProps({
   players: {
@@ -36,134 +36,132 @@ function getRankBadgeClass(index) {
   if (index === 2) return 'rank-third'
   return 'rank-other'
 }
-
-function getRankMedal(index) {
-  if (index === 0) return '🥇'
-  if (index === 1) return '🥈'
-  if (index === 2) return '🥉'
-  return `#${index + 1}`
-}
 </script>
 
 <template>
   <section class="leaderboard-section" id="rankings">
-    <div class="container">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">Classificação de Treinadores</h2>
-          <p class="section-subtitle">Os maiores mestres Pokémon do servidor</p>
-        </div>
-
-        <!-- Filter tabs -->
-        <div class="filter-tabs">
-          <button 
-            :class="['filter-btn', { active: activeFilter === 'captured' }]"
-            @click="activeFilter = 'captured'"
-          >
-            <Trophy :size="16" />
-            <span>Capturas</span>
-          </button>
-
-          <button 
-            :class="['filter-btn', { active: activeFilter === 'shinies' }]"
-            @click="activeFilter = 'shinies'"
-          >
-            <Sparkles :size="16" />
-            <span>Shinies</span>
-          </button>
-
-          <button 
-            :class="['filter-btn', { active: activeFilter === 'legendaries' }]"
-            @click="activeFilter = 'legendaries'"
-          >
-            <Award :size="16" />
-            <span>Lendários</span>
-          </button>
-
-          <button 
-            :class="['filter-btn', { active: activeFilter === 'playtime' }]"
-            @click="activeFilter = 'playtime'"
-          >
-            <Clock :size="16" />
-            <span>Tempo</span>
-          </button>
-        </div>
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Classificação dos Amigos</h2>
+        <p class="section-subtitle">Acompanhe a evolução de cada treinador no nosso mundo</p>
       </div>
 
-      <!-- Leaderboard List -->
-      <div class="leaderboard-card glass-panel">
-        <div class="table-header">
-          <span class="col-rank">Posição</span>
-          <span class="col-player">Treinador</span>
-          <span class="col-stat">Pokémons</span>
-          <span class="col-stat">Shinies</span>
-          <span class="col-stat">Lendários</span>
-          <span class="col-stat">Kanto Pokédex</span>
-          <span class="col-actions">Ação</span>
-        </div>
+      <!-- Filtros em Abas Táteis (Neo-Skeuo Tabs) -->
+      <div class="filter-tabs">
+        <button 
+          :class="['filter-btn', { active: activeFilter === 'captured' }]"
+          @click="activeFilter = 'captured'"
+        >
+          <Trophy :size="15" />
+          <span>Capturas</span>
+        </button>
 
-        <div class="table-rows">
-          <div 
-            v-for="(player, index) in sortedPlayers" 
-            :key="player.uuid"
-            class="table-row"
-            @click="emit('selectPlayer', player)"
-          >
-            <!-- Rank Column -->
-            <div class="col-rank">
-              <span class="rank-badge" :class="getRankBadgeClass(index)">
-                {{ getRankMedal(index) }}
-              </span>
-            </div>
+        <button 
+          :class="['filter-btn', { active: activeFilter === 'shinies' }]"
+          @click="activeFilter = 'shinies'"
+        >
+          <Sparkles :size="15" />
+          <span>Shinies</span>
+        </button>
 
-            <!-- Player Column -->
-            <div class="col-player">
-              <div class="avatar-wrapper">
-                <img :src="player.avatar" :alt="player.username" class="player-avatar" />
-                <span v-if="player.isOnline" class="online-indicator" title="Online no Servidor"></span>
-              </div>
-              <div class="player-details">
-                <span class="player-username">{{ player.username }}</span>
-                <span class="player-rank-title">{{ player.rank }}</span>
-              </div>
-            </div>
+        <button 
+          :class="['filter-btn', { active: activeFilter === 'legendaries' }]"
+          @click="activeFilter = 'legendaries'"
+        >
+          <Award :size="15" />
+          <span>Lendários</span>
+        </button>
 
-            <!-- Stat 1: Total Captured -->
-            <div class="col-stat">
-              <span class="stat-main">{{ player.totalCaptured }}</span>
-              <span class="stat-sub">pokémons</span>
-            </div>
+        <button 
+          :class="['filter-btn', { active: activeFilter === 'playtime' }]"
+          @click="activeFilter = 'playtime'"
+        >
+          <Clock :size="15" />
+          <span>Tempo</span>
+        </button>
+      </div>
+    </div>
 
-            <!-- Stat 2: Shinies -->
-            <div class="col-stat">
-              <span class="stat-main shiny-text">✨ {{ player.shiniesCount }}</span>
-            </div>
+    <!-- Tabela Neo-Skeuo com Contornos Fortes e Sombras -->
+    <div class="table-container neo-card">
+      <div class="table-header">
+        <span class="col-rank">Posição</span>
+        <span class="col-player">Treinador</span>
+        <span class="col-stat">Pokémons</span>
+        <span class="col-stat">Shinies</span>
+        <span class="col-stat">Lendários</span>
+        <span class="col-pokedex">Kanto Dex</span>
+        <span class="col-actions">Ficha</span>
+      </div>
 
-            <!-- Stat 3: Legendaries -->
-            <div class="col-stat">
-              <span class="stat-main legendary-text">👑 {{ player.legendariesCount }}</span>
-            </div>
+      <div class="table-rows">
+        <div 
+          v-for="(player, index) in sortedPlayers" 
+          :key="player.uuid"
+          class="table-row"
+          @click="emit('selectPlayer', player)"
+        >
+          <!-- Posição com Ícone Lucide -->
+          <div class="col-rank">
+            <span class="rank-tag" :class="getRankBadgeClass(index)">
+              <Medal v-if="index < 3" :size="13" />
+              <span>{{ index + 1 }}º</span>
+            </span>
+          </div>
 
-            <!-- Stat 4: Kanto Pokédex Progress Bar -->
-            <div class="col-stat col-pokedex">
-              <div class="pokedex-progress-bar">
-                <div 
-                  class="progress-fill" 
-                  :style="{ width: ((player.pokedexProgress.kanto.caught / 151) * 100) + '%' }"
-                ></div>
-              </div>
-              <span class="pokedex-percent">
-                {{ player.pokedexProgress.kanto.caught }} / 151 ({{ Math.round((player.pokedexProgress.kanto.caught / 151) * 100) }}%)
-              </span>
+          <!-- Treinador -->
+          <div class="col-player">
+            <div class="avatar-wrap">
+              <img :src="player.avatar" :alt="player.username" class="player-avatar" />
+              <span v-if="player.isOnline" class="online-indicator"></span>
             </div>
+            <div class="player-details">
+              <span class="player-username">{{ player.username }}</span>
+              <span class="player-rank-label">{{ player.rank }}</span>
+            </div>
+          </div>
 
-            <!-- Action: View details -->
-            <div class="col-actions">
-              <button class="inspect-btn">
-                <Eye :size="16" />
-                <span>Inspecionar</span>
-              </button>
+          <!-- Capturas -->
+          <div class="col-stat">
+            <span class="stat-number">{{ player.totalCaptured }}</span>
+            <span class="stat-unit">pokémons</span>
+          </div>
+
+          <!-- Shinies -->
+          <div class="col-stat">
+            <span class="stat-number text-gold stat-with-icon">
+              <Sparkles :size="14" />
+              <span>{{ player.shiniesCount }}</span>
+            </span>
+          </div>
+
+          <!-- Lendários -->
+          <div class="col-stat">
+            <span class="stat-number text-purple stat-with-icon">
+              <Crown :size="14" />
+              <span>{{ player.legendariesCount }}</span>
+            </span>
+          </div>
+
+          <!-- Progresso Pokédex (Linear Progress estilo Kit) -->
+          <div class="col-pokedex">
+            <div class="linear-progress-track neo-card-inset">
+              <div 
+                class="linear-progress-fill" 
+                :style="{ width: ((player.pokedexProgress.kanto.caught / 151) * 100) + '%' }"
+              ></div>
             </div>
+            <span class="progress-label">
+              {{ player.pokedexProgress.kanto.caught }}/151 ({{ Math.round((player.pokedexProgress.kanto.caught / 151) * 100) }}%)
+            </span>
+          </div>
+
+          <!-- Ação -->
+          <div class="col-actions">
+            <button class="btn btn-primary btn-inspect">
+              <Eye :size="14" />
+              <span>Ver</span>
+            </button>
           </div>
         </div>
       </div>
@@ -173,35 +171,38 @@ function getRankMedal(index) {
 
 <style scoped>
 .leaderboard-section {
-  padding: 3rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .section-header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 1.75rem;
   flex-wrap: wrap;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .section-title {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #ffffff;
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: var(--neo-ink);
+  letter-spacing: -0.02em;
 }
 
 .section-subtitle {
-  color: var(--text-muted);
-  font-size: 0.95rem;
+  color: var(--neo-ink-light);
+  font-size: 0.92rem;
 }
 
+/* Tabs do Kit */
 .filter-tabs {
   display: flex;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.3rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--glass-border);
+  background: var(--neo-bg-alt);
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  border: var(--neo-border);
   gap: 0.25rem;
 }
 
@@ -209,41 +210,43 @@ function getRankMedal(index) {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.5rem 0.9rem;
+  padding: 0.45rem 0.85rem;
   background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
+  border-radius: var(--radius-xs);
+  color: var(--neo-ink-light);
   font-family: var(--font-family);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
 }
 
 .filter-btn:hover {
-  color: var(--text-main);
+  color: var(--neo-ink);
 }
 
 .filter-btn.active {
-  background: rgba(56, 189, 248, 0.2);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: var(--neo-surface);
+  color: var(--neo-ink);
+  box-shadow: 1.5px 1.5px 0px var(--neo-ink);
+  border: 1px solid var(--neo-ink);
 }
 
-/* Leaderboard Table */
-.leaderboard-card {
+/* Tabela Neo-Skeuo */
+.table-container {
   overflow-x: auto;
 }
 
 .table-header {
   display: grid;
-  grid-template-columns: 80px 2.2fr 1.2fr 1.1fr 1.1fr 1.8fr 1.1fr;
-  padding: 1.2rem 1.5rem;
-  border-bottom: 1px solid var(--glass-border);
-  color: var(--text-dim);
-  font-size: 0.8rem;
-  font-weight: 700;
+  grid-template-columns: 85px 2fr 1.1fr 1fr 1fr 1.8fr 100px;
+  padding: 1rem 1.4rem;
+  background: var(--neo-bg-alt);
+  border-bottom: var(--neo-border);
+  color: var(--neo-ink);
+  font-size: 0.78rem;
+  font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   align-items: center;
@@ -251,11 +254,12 @@ function getRankMedal(index) {
 
 .table-row {
   display: grid;
-  grid-template-columns: 80px 2.2fr 1.2fr 1.1fr 1.1fr 1.8fr 1.1fr;
-  padding: 1.1rem 1.5rem;
+  grid-template-columns: 85px 2fr 1.1fr 1fr 1fr 1.8fr 100px;
+  padding: 1rem 1.4rem;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1.5px solid #e4decb;
   cursor: pointer;
+  background: var(--neo-surface);
   transition: var(--transition);
 }
 
@@ -264,57 +268,74 @@ function getRankMedal(index) {
 }
 
 .table-row:hover {
-  background: rgba(56, 189, 248, 0.06);
-  transform: scale([1.002]);
+  background: #fdfbf7;
 }
 
-/* Columns */
+/* Colunas */
 .col-rank {
   display: flex;
   align-items: center;
 }
 
-.rank-badge {
-  font-size: 1.1rem;
+.rank-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.82rem;
   font-weight: 800;
   font-family: var(--font-mono);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--neo-ink);
+  background: var(--neo-bg-alt);
 }
 
 .rank-first {
-  filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.5));
+  background: #fef08a;
+  box-shadow: 1.5px 1.5px 0px var(--neo-ink);
+}
+
+.rank-second {
+  background: #e2e8f0;
+  box-shadow: 1.5px 1.5px 0px var(--neo-ink);
+}
+
+.rank-third {
+  background: #fed7aa;
+  box-shadow: 1.5px 1.5px 0px var(--neo-ink);
 }
 
 .col-player {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
-.avatar-wrapper {
+.avatar-wrap {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
 }
 
 .player-avatar {
   width: 100%;
   height: 100%;
-  border-radius: var(--radius-sm);
-  background: #0f172a;
+  border-radius: var(--radius-xs);
+  border: 1.5px solid var(--neo-ink);
+  background: var(--neo-bg-alt);
   image-rendering: pixelated;
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .online-indicator {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  width: 11px;
-  height: 11px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: #10b981;
-  border: 2px solid var(--bg-primary);
-  box-shadow: 0 0 6px #10b981;
+  border: 1.5px solid var(--neo-ink);
 }
 
 .player-details {
@@ -323,14 +344,15 @@ function getRankMedal(index) {
 }
 
 .player-username {
-  font-weight: 700;
-  font-size: 1rem;
-  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--neo-ink);
 }
 
-.player-rank-title {
-  font-size: 0.75rem;
-  color: var(--accent-cyan);
+.player-rank-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--neo-ink-light);
 }
 
 .col-stat {
@@ -338,77 +360,71 @@ function getRankMedal(index) {
   flex-direction: column;
 }
 
-.stat-main {
-  font-weight: 700;
-  font-size: 1.05rem;
-  color: #ffffff;
-}
-
-.stat-sub {
-  font-size: 0.7rem;
-  color: var(--text-dim);
-}
-
-.shiny-text {
-  color: #facc15;
-}
-
-.legendary-text {
-  color: #c084fc;
-}
-
-/* Pokedex column */
-.col-pokedex {
-  width: 90%;
-}
-
-.pokedex-progress-bar {
-  width: 100%;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  margin-bottom: 0.3rem;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #0284c7, #38bdf8);
-  border-radius: var(--radius-full);
-  transition: width 0.5s ease;
-}
-
-.pokedex-percent {
-  font-size: 0.75rem;
-  color: var(--text-muted);
+.stat-number {
+  font-weight: 900;
+  font-size: 1rem;
+  color: var(--neo-ink);
   font-family: var(--font-mono);
 }
 
-.inspect-btn {
+.stat-with-icon {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.85rem;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--glass-border);
-  color: var(--text-main);
-  font-family: var(--font-family);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
+  gap: 0.35rem;
 }
 
-.table-row:hover .inspect-btn {
-  background: var(--accent-ocean);
-  border-color: var(--accent-cyan);
-  color: #ffffff;
+.stat-unit {
+  font-size: 0.68rem;
+  color: var(--neo-ink-muted);
+}
+
+.text-gold {
+  color: #b45309;
+}
+
+.text-purple {
+  color: #6b21a8;
+}
+
+/* Linear Progress Bar (Skeuomorphic Inset) */
+.col-pokedex {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-right: 1.5rem;
+}
+
+.linear-progress-track {
+  width: 100%;
+  height: 10px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1.5px solid var(--neo-ink);
+  padding: 1px;
+}
+
+.linear-progress-fill {
+  height: 100%;
+  background: #38bdf8;
+  border-radius: var(--radius-full);
+  border-right: 1.5px solid var(--neo-ink);
+}
+
+.progress-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--neo-ink-light);
+  font-family: var(--font-mono);
+}
+
+.btn-inspect {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.78rem;
 }
 
 @media (max-width: 950px) {
-  .leaderboard-card {
-    min-width: 800px;
+  .table-container {
+    min-width: 760px;
   }
 }
 </style>
